@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+  APPRENTICE
+}
+
+enum Lang {
+  UZ
+  RU
+  EN
+}
+
+enum BarberRole {
+  MAIN
+  APPRENTICE
+}
+
+enum BookingStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED_BY_USER
+  DISCARDED_NO_SHOW
+  TRANSFERRED
+}
+
+enum BlockType {
+  BREAK
+  WALK_IN
+  MANUAL
+}
+
+model User {
+  id          String   @id @default(cuid())
+  telegramId  BigInt   @unique
+  username    String?
+  firstName   String?
+  lastName    String?
+  phone       String?
+  role        Role     @default(CUSTOMER)
+  language    Lang     @default(UZ)
+  remindersOn Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bookings      Booking[]
+  barberProfile Barber?
+}
+
+model Barber {
+  id          String     @id @default(cuid())
+  userId      String     @unique
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        BarberRole
+  isActive    Boolean    @default(true)
+  displayName String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  bookings Booking[]
+  blocks   TimeBlock[]
+}
+
+model Service {
+  id          String  @id @default(cuid())
+  key         String  @unique
+  name        String
+  durationMin Int
+  priceMinor  Int
+  isActive    Boolean @default(true)
+  sortOrder   Int     @default(0)
+}
+
+model Booking {
+  id             String        @id @default(cuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  barberId       String
+  barber         Barber        @relation(fields: [barberId], references: [id])
+  startAt        DateTime
+  endAt          DateTime
+  durationMin    Int
+  totalPriceMinor Int
+  adults         Int           @default(1)
+  children       Int           @default(0)
+  services       String[]
+  status         BookingStatus @default(SCHEDULED)
+  remindersOn    Boolean       @default(true)
+  reminderSentAt DateTime?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([barberId, startAt])
+  @@index([status, startAt])
+}
+
+model TimeBlock {
+  id        String    @id @default(cuid())
+  barberId  String
+  barber    Barber    @relation(fields: [barberId], references: [id])
+  startAt   DateTime
+  endAt     DateTime
+  type      BlockType
+  note      String?
+  createdAt DateTime  @default(now())
+
+  @@index([barberId, startAt])
+}
+
+model Settings {
+  id              String   @id @default("singleton")
+  shopName        String   @default("Barbershop")
+  timezone        String   @default("Asia/Tashkent")
+  currency        String   @default("UZS")
+  reminderLeadMin Int      @default(15)
+  openHourMin     Int      @default(540)
+  closeHourMin    Int      @default(1260)
+  updatedAt       DateTime @updatedAt
+}

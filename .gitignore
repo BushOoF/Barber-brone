@@ -1,0 +1,26 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+.idea/
+.vscode/
+coverage/
+.turbo/
+.cache/
+
+# Local Claude Code settings (per-user, not source of truth)
+.claude/
+
+# Prisma
+apps/backend/prisma/migrations/dev.db*
+
+# Vite
+apps/webapp/dist/
+
+# PM2
+.pm2/
+ecosystem.config.local.js

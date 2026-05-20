@@ -1,0 +1,24 @@
+{
+  "name": "barber-brone",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Barbershop Telegram Mini App — booking system with smart scheduling",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm --workspace apps/backend run dev",
+    "dev:webapp": "npm --workspace apps/webapp run dev",
+    "build:backend": "npm --workspace apps/backend run build",
+    "build:webapp": "npm --workspace apps/webapp run build",
+    "build": "npm run build:backend && npm run build:webapp",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:migrate": "npm --workspace apps/backend run db:migrate",
+    "db:seed": "npm --workspace apps/backend run db:seed",
+    "db:studio": "npm --workspace apps/backend run db:studio"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

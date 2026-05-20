@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Fallbacks tuned for high contrast in light mode. Overridden at runtime from
+     Telegram themeParams in lib/telegram.ts. */
+  --tg-bg: #ffffff;
+  --tg-text: #0b1220;
+  --tg-hint: #6b7280;
+  --tg-link: #2563eb;
+  --tg-button: #2563eb;
+  --tg-button-text: #ffffff;
+  --tg-secondary: #eef2f7;
+  --tg-destructive: #dc2626;
+
+  /* Derived, high-contrast tokens our components rely on. Computed from --tg-text
+     so they automatically contrast against the chosen text colour in both modes. */
+  --line-strong: color-mix(in srgb, var(--tg-text) 18%, transparent);
+  --line-soft: color-mix(in srgb, var(--tg-text) 8%, transparent);
+  --surface-1: color-mix(in srgb, var(--tg-text) 5%, var(--tg-bg));
+  --surface-2: color-mix(in srgb, var(--tg-text) 9%, var(--tg-bg));
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --shadow-pop: 0 4px 16px rgba(37, 99, 235, 0.28), 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overscroll-behavior-y: none;
+  background-color: var(--tg-bg);
+  color: var(--tg-text);
+}
+
+/* Telegram safe-area helpers */
+.safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+}
+.safe-top {
+  padding-top: max(env(safe-area-inset-top), 0.5rem);
+}
+
+/* Scrollbar polish on touch surfaces (mobile only sees it on web fallback) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: 200px 0;
+  }
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--surface-1) 0%, var(--surface-2) 50%, var(--surface-1) 100%);
+  background-size: 400px 100%;
+  animation: shimmer 1.6s linear infinite;
+}

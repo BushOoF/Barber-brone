@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: barber-brone-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: barber
+      POSTGRES_PASSWORD: barber_dev_password
+      POSTGRES_DB: barber_brone
+    ports:
+      - "5432:5432"
+    volumes:
+      - barber_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U barber -d barber_brone"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  barber_pgdata:
