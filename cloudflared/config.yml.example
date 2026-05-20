@@ -1,0 +1,39 @@
+# Cloudflare Tunnel config — copy to /etc/cloudflared/config.yml on the VPS.
+#
+# Usage:
+#   sudo mkdir -p /etc/cloudflared
+#   sudo cp cloudflared/config.yml.example /etc/cloudflared/config.yml
+#   sudo nano /etc/cloudflared/config.yml          # replace UUID + hostname
+#   sudo systemctl restart cloudflared
+
+# UUID from `cloudflared tunnel create barber-brone` (file at ~/.cloudflared/<UUID>.json).
+tunnel: REPLACE_WITH_TUNNEL_UUID
+credentials-file: /etc/cloudflared/REPLACE_WITH_TUNNEL_UUID.json
+
+# Optional but recommended logging
+loglevel: info
+
+ingress:
+  # ----- Single-bot deployment -----
+  - hostname: barber.yourdomain.com
+    service: http://localhost:80
+    originRequest:
+      # Send Host header through so nginx routes to the right server_name block.
+      httpHostHeader: barber.yourdomain.com
+      # Allow up to 60s for slow first requests (Prisma cold-start, etc.).
+      connectTimeout: 30s
+      keepAliveTimeout: 90s
+
+  # ----- Multi-bot: uncomment + duplicate per shop -----
+  # - hostname: barber2.yourdomain.com
+  #   service: http://localhost:80
+  #   originRequest:
+  #     httpHostHeader: barber2.yourdomain.com
+  #
+  # - hostname: barber3.yourdomain.com
+  #   service: http://localhost:80
+  #   originRequest:
+  #     httpHostHeader: barber3.yourdomain.com
+
+  # Required catch-all. Any hostname not matched above returns 404 at the edge.
+  - service: http_status:404
