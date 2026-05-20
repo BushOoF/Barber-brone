@@ -2,7 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 import { requireAuth, requireStaff } from "../auth.js";
 import { prisma } from "../../lib/prisma.js";
-import { localDayBoundsUtc, todayKey } from "../../lib/time.js";
+import { localDateKey, localDateTimeToUtc, localDayBoundsUtc, todayKey } from "../../lib/time.js";
 import { normalizeSelection, quote } from "../../services/pricing.js";
 import { isSlotAvailable } from "../../services/availability.js";
 import { applyMoves, planShiftEarlier } from "../../services/smart-shift.js";
@@ -12,7 +12,6 @@ import {
   notifyShiftedLater,
   notifyTransferred,
 } from "../../services/notify.js";
-import { localDateKey, localDateTimeToUtc, localDayBoundsUtc } from "../../lib/time.js";
 import { serializeBooking } from "../serializers.js";
 
 const createSchema = z.object({

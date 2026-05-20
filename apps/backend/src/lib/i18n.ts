@@ -27,7 +27,8 @@ const STRINGS = {
     "notify.reminder_will": "Vaqtingizdan 15 daqiqa oldin eslatamiz.",
     "notify.reminders_off": "Bu yozuv uchun eslatma o'chirilgan.",
     "notify.confirmed":
-      "✅ *Yozuv tasdiqlandi*\n\nSartarosh: {barber}\nVaqt: *{time}*\nDavomiyligi: {dur} daq\nJami: {total}\n\n{rem}",
+      "✅ *Yozuv tasdiqlandi*\n\nSartarosh: {barber}\nVaqt: *{time}*\nDavomiyligi: {dur} daq\nJami: {total}{location}\n\n{rem}",
+    "notify.location_line": "\n📍 *Manzil:* {location}",
     "notify.shifted_earlier":
       "🎉 *Yaxshi xabar!* Vaqt bo'shab qoldi — yozuvingiz {old} dan *{new}* ga ko'chirildi. Erta keling.",
     "notify.shifted_later":
@@ -60,7 +61,8 @@ const STRINGS = {
     "notify.reminder_will": "Напомним за 15 минут до записи.",
     "notify.reminders_off": "Напоминания для этой записи отключены.",
     "notify.confirmed":
-      "✅ *Запись подтверждена*\n\nМастер: {barber}\nВремя: *{time}*\nДлительность: {dur} мин\nИтого: {total}\n\n{rem}",
+      "✅ *Запись подтверждена*\n\nМастер: {barber}\nВремя: *{time}*\nДлительность: {dur} мин\nИтого: {total}{location}\n\n{rem}",
+    "notify.location_line": "\n📍 *Адрес:* {location}",
     "notify.shifted_earlier":
       "🎉 *Хорошие новости!* Освободилось время — ваша запись перенесена с {old} на *{new}*. Можно прийти раньше.",
     "notify.shifted_later":
@@ -93,7 +95,8 @@ const STRINGS = {
     "notify.reminder_will": "We'll remind you 15 minutes before your slot.",
     "notify.reminders_off": "Reminders are off for this booking.",
     "notify.confirmed":
-      "✅ *Booking confirmed*\n\nBarber: {barber}\nTime: *{time}*\nDuration: {dur} min\nTotal: {total}\n\n{rem}",
+      "✅ *Booking confirmed*\n\nBarber: {barber}\nTime: *{time}*\nDuration: {dur} min\nTotal: {total}{location}\n\n{rem}",
+    "notify.location_line": "\n📍 *Location:* {location}",
     "notify.shifted_earlier":
       "🎉 *Good news!* A slot opened earlier — your appointment moved from {old} to *{new}*. You can come in earlier.",
     "notify.shifted_later":

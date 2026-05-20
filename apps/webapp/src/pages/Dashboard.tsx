@@ -31,9 +31,13 @@ export function Dashboard({ me }: { me: MeResponse }) {
     [effectiveBarberId, date],
   );
 
+  // Apprentice gate from barber-dev — if the operator turned this feature off, never expose
+  // the transfer-to-apprentice action even if multiple barbers exist in the DB.
   const canTransfer = useMemo(
-    () => barbers.filter((b) => b.id !== effectiveBarberId && b.isActive).length > 0,
-    [barbers, effectiveBarberId],
+    () =>
+      me.shop.hasApprenticeFeature &&
+      barbers.filter((b) => b.id !== effectiveBarberId && b.isActive).length > 0,
+    [me.shop.hasApprenticeFeature, barbers, effectiveBarberId],
   );
 
   const onDiscard = async (b: Booking) => {

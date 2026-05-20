@@ -117,12 +117,14 @@ model TimeBlock {
 }
 
 model Settings {
-  id              String   @id @default("singleton")
-  shopName        String   @default("Barbershop")
-  timezone        String   @default("Asia/Tashkent")
-  currency        String   @default("UZS")
-  reminderLeadMin Int      @default(15)
-  openHourMin     Int      @default(540)
-  closeHourMin    Int      @default(1260)
-  updatedAt       DateTime @updatedAt
+  id                   String   @id @default("singleton")
+  shopName             String   @default("Barbershop")
+  timezone             String   @default("Asia/Tashkent")
+  currency             String   @default("UZS")
+  reminderLeadMin      Int      @default(15)
+  openHourMin          Int      @default(540)
+  closeHourMin         Int      @default(1260)
+  location             String?  // Address shown to customers on booking confirmation.
+  hasApprenticeFeature Boolean  @default(true)  // Toggled remotely by the barber-dev operator bot.
+  updatedAt            DateTime @updatedAt
 }

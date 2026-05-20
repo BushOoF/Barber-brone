@@ -26,12 +26,17 @@ export async function notifyBookingConfirmed(bookingId: string): Promise<void> {
   });
   if (!b) return;
   const lang = langOf(b.user);
+  const settings = await prisma.settings.findUnique({ where: { id: "singleton" } });
   const remNote = b.remindersOn ? t(lang, "notify.reminder_will") : t(lang, "notify.reminders_off");
+  const locationLine = settings?.location
+    ? t(lang, "notify.location_line", { location: settings.location })
+    : "";
   const text = t(lang, "notify.confirmed", {
     barber: b.barber.displayName,
     time: formatLocalTime(b.startAt),
     dur: b.durationMin,
     total: formatMoney(b.totalPriceMinor),
+    location: locationLine,
     rem: remNote,
   });
   await safeSend(b.user.telegramId, text);

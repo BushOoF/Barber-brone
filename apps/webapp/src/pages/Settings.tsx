@@ -14,12 +14,21 @@ export function Settings({ me }: { me: MeResponse }) {
 
       <div className="space-y-2 px-5 pb-6">
         <ListItem
-          leading={<IconBadge emoji="👥" />}
-          title={t("set.apprentices")}
-          subtitle={t("set.apprentices_sub")}
+          leading={<IconBadge emoji="🏪" />}
+          title={t("set.shop_info")}
+          subtitle={t("set.shop_info_sub")}
           trailing={<Chevron />}
-          onClick={() => nav("/settings/apprentices")}
+          onClick={() => nav("/settings/shop-info")}
         />
+        {me.shop.hasApprenticeFeature ? (
+          <ListItem
+            leading={<IconBadge emoji="👥" />}
+            title={t("set.apprentices")}
+            subtitle={t("set.apprentices_sub")}
+            trailing={<Chevron />}
+            onClick={() => nav("/settings/apprentices")}
+          />
+        ) : null}
         <ListItem
           leading={<IconBadge emoji="✂️" />}
           title={t("set.services")}

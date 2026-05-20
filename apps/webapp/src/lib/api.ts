@@ -113,7 +113,7 @@ export const api = {
   adminListUsers: (search?: string) =>
     request<{ users: AdminUser[] }>(`/api/admin/users${search ? `?search=${encodeURIComponent(search)}` : ""}`),
 
-  adminUpdateSettings: (patch: Partial<{ shopName: string; reminderLeadMin: number; openHourMin: number; closeHourMin: number; timezone: string; currency: string }>) =>
+  adminUpdateSettings: (patch: Partial<{ shopName: string; reminderLeadMin: number; openHourMin: number; closeHourMin: number; timezone: string; currency: string; location: string | null }>) =>
     request<{ settings: ShopSettings }>("/api/admin/settings", { method: "PUT", body: JSON.stringify(patch) }),
 
   adminFinances: (from?: string, to?: string) =>
@@ -144,6 +144,8 @@ export interface MeResponse {
     currency: string;
     openHourMin: number;
     closeHourMin: number;
+    location: string | null;
+    hasApprenticeFeature: boolean;
   };
 }
 
@@ -248,6 +250,8 @@ export interface ShopSettings {
   reminderLeadMin: number;
   openHourMin: number;
   closeHourMin: number;
+  location: string | null;
+  hasApprenticeFeature: boolean;
 }
 
 export interface FinancesSummary {

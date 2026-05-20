@@ -113,6 +113,12 @@ export function Confirmation({ me }: { me: MeResponse }) {
             strong
             highlight
           />
+          {me.shop.location ? (
+            <>
+              <Divider />
+              <LocationRow label={t("confirm.location")} value={me.shop.location} />
+            </>
+          ) : null}
         </div>
 
         <button
@@ -156,4 +162,22 @@ function Row({ label, value, strong, highlight }: { label: string; value: string
 
 function Divider() {
   return <div className="my-0.5 h-px bg-line-soft" />;
+}
+
+function LocationRow({ label, value }: { label: string; value: string }) {
+  // Open the address in Google/Apple Maps when tapped.
+  const mapHref = `https://maps.google.com/?q=${encodeURIComponent(value)}`;
+  return (
+    <div className="flex items-start justify-between gap-3 py-1.5">
+      <span className="shrink-0 text-xs font-bold uppercase tracking-wider text-tg-hint">{label}</span>
+      <a
+        href={mapHref}
+        target="_blank"
+        rel="noreferrer"
+        className="text-right text-sm font-semibold text-tg-link underline-offset-2 hover:underline"
+      >
+        📍 {value}
+      </a>
+    </div>
+  );
 }

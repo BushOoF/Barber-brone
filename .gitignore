@@ -15,6 +15,20 @@ coverage/
 # Local Claude Code settings (per-user, not source of truth)
 .claude/
 
+# SSH keys, certificates — never commit these (AWS Lightsail downloads land as *.pem)
+*.pem
+*.key
+*.p12
+
+# TypeScript build artifacts
+*.tsbuildinfo
+apps/webapp/vite.config.d.ts
+apps/webapp/vite.config.js
+apps/backend/prisma/seed.js
+apps/backend/prisma/seed.js.map
+apps/barber-dev/prisma/seed.js
+apps/barber-dev/prisma/seed.js.map
+
 # Prisma
 apps/backend/prisma/migrations/dev.db*
 

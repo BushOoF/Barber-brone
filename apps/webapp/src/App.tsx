@@ -10,6 +10,7 @@ import { ApprenticesPage } from "./pages/settings/Apprentices";
 import { ServicesPage } from "./pages/settings/Services";
 import { ClientsPage } from "./pages/settings/Clients";
 import { FinancesPage } from "./pages/settings/Finances";
+import { ShopInfoPage } from "./pages/settings/ShopInfo";
 import { LangProvider } from "./state/Lang";
 import { DEFAULT_LANG, translate, type Lang } from "./lib/i18n";
 
@@ -44,8 +45,12 @@ export function App() {
         {/* Admin-only Settings tree */}
         <Route path="/settings" element={isAdmin ? <Settings me={data} /> : <Navigate to="/dashboard" replace />} />
         <Route
+          path="/settings/shop-info"
+          element={isAdmin ? <ShopInfoPage me={data} /> : <Navigate to="/dashboard" replace />}
+        />
+        <Route
           path="/settings/apprentices"
-          element={isAdmin ? <ApprenticesPage me={data} /> : <Navigate to="/dashboard" replace />}
+          element={isAdmin && data.shop.hasApprenticeFeature ? <ApprenticesPage me={data} /> : <Navigate to="/settings" replace />}
         />
         <Route
           path="/settings/services"

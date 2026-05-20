@@ -170,7 +170,7 @@ bot.catch((err) => {
 
 async function registerCommands() {
   // Per-language bot command menus so the slash autocomplete in each chat matches the user's language.
-  const sets: Array<{ lang: Lang; code: string }> = [
+  const sets: Array<{ lang: Lang; code: "uz" | "ru" | "en" }> = [
     { lang: "UZ", code: "uz" },
     { lang: "RU", code: "ru" },
     { lang: "EN", code: "en" },

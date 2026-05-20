@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+  // Custom output keeps the operator bot's generated client isolated from the
+  // shop bot's client (otherwise they'd both overwrite node_modules/@prisma/client).
+  output   = "./generated"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum FeeStatus {
+  PENDING
+  COLLECTED
+  WAIVED
+}
+
+/// A barbershop running an instance of the barber-brone bot.
+model Shop {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  name            String
+  ownerTelegramId BigInt
+  ownerUsername   String?
+  ownerName       String?
+  botUsername     String?
+  /// Direct DATABASE_URL of this shop's per-tenant Postgres database (used to
+  /// fetch revenue + toggle apprentice/location in the shop's Settings row).
+  dbUrl           String?
+  monthlyFeeMinor Int      @default(0)
+  hasApprenticeFeature Boolean @default(true)
+  /// Mirror of the location set in the shop's own DB — kept here for quick
+  /// listings without touching the shop's database. Updated by the /location command.
+  location        String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  collections      FeeCollection[]
+  revenueSnapshots RevenueSnapshot[]
+}
+
+/// A developer/operator authorized to use the barber-dev bot.
+model Operator {
+  id          String   @id @default(cuid())
+  telegramId  BigInt   @unique
+  username    String?
+  firstName   String?
+  isSuper     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+/// Per-shop, per-month billing record.
+model FeeCollection {
+  id          String    @id @default(cuid())
+  shopId      String
+  shop        Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  monthKey    String    // "YYYY-MM"
+  amountMinor Int
+  status      FeeStatus @default(PENDING)
+  collectedAt DateTime?
+  note        String?
+  createdAt   DateTime  @default(now())
+
+  @@unique([shopId, monthKey])
+}
+
+/// Cached revenue numbers per shop / per month, refreshed lazily on read.
+model RevenueSnapshot {
+  id            String   @id @default(cuid())
+  shopId        String
+  shop          Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  monthKey      String   // "YYYY-MM"
+  revenueMinor  Int
+  bookingsCount Int
+  cachedAt      DateTime @default(now())
+
+  @@unique([shopId, monthKey])
+}
+
+/// Catches all reminder kinds so we can record "we already messaged operators about X this period".
+model ReminderTick {
+  id        String   @id @default(cuid())
+  kind      String   // e.g. "monthly_billing:2026-05", "weekly_quality:2026-W18"
+  firedAt   DateTime @default(now())
+
+  @@unique([kind])
+}

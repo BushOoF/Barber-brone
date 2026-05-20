@@ -20,6 +20,8 @@ export async function meRoutes(app: FastifyInstance) {
         currency: settings?.currency ?? "UZS",
         openHourMin: settings?.openHourMin ?? 540,
         closeHourMin: settings?.closeHourMin ?? 1260,
+        location: settings?.location ?? null,
+        hasApprenticeFeature: settings?.hasApprenticeFeature ?? true,
       },
     };
   });

@@ -122,6 +122,7 @@ export async function adminRoutes(app: FastifyInstance) {
         reminderLeadMin: z.number().int().min(0).max(120).optional(),
         openHourMin: z.number().int().min(0).max(1440).optional(),
         closeHourMin: z.number().int().min(0).max(1440).optional(),
+        location: z.string().max(300).nullable().optional(),
       })
       .safeParse(req.body);
     if (!body.success) return reply.code(400).send({ error: "bad_request", details: body.error.flatten() });

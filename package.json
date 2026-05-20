@@ -9,12 +9,15 @@
   "scripts": {
     "dev:backend": "npm --workspace apps/backend run dev",
     "dev:webapp": "npm --workspace apps/webapp run dev",
+    "dev:operator": "npm --workspace apps/barber-dev run dev",
     "build:backend": "npm --workspace apps/backend run build",
     "build:webapp": "npm --workspace apps/webapp run build",
-    "build": "npm run build:backend && npm run build:webapp",
+    "build:operator": "npm --workspace apps/barber-dev run build",
+    "build": "npm run build:backend && npm run build:webapp && npm run build:operator",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
     "db:migrate": "npm --workspace apps/backend run db:migrate",
+    "db:migrate:operator": "npm --workspace apps/barber-dev run db:migrate",
     "db:seed": "npm --workspace apps/backend run db:seed",
     "db:studio": "npm --workspace apps/backend run db:studio"
   },

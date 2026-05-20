@@ -51,7 +51,7 @@ const STRINGS = {
     "landing.tap_to_book": "Hozir band qilish",
     "landing.finding_slot": "Vaqt qidirilmoqda…",
     "landing.no_slot": "Bugun joy yo'q",
-    "landing.different_time": "📅 Boshqa vaqtni tanlash",
+    "landing.different_time": "🕒 Boshqa vaqtni tanlash",
     "landing.hide_other_times": "Yashirish",
     "landing.no_slots_day": "Bu kuni joy yo'q.",
     "landing.barber": "Sartarosh",
@@ -92,6 +92,7 @@ const STRINGS = {
     "confirm.duration": "Davomiyligi",
     "confirm.extras": "Qo'shimchalar",
     "confirm.total": "Jami",
+    "confirm.location": "Joylashuv",
     "confirm.reminder_on": "🔔 Eslatma yoqilgan — 15 daqiqa oldin xabar beramiz",
     "confirm.reminder_off": "🔕 Eslatma o'chirilgan — bosing va yoqing",
     "confirm.close": "Yopish",
@@ -159,6 +160,8 @@ const STRINGS = {
 
     // ---- settings ----
     "set.title": "Sozlamalar",
+    "set.shop_info": "Do'kon ma'lumotlari",
+    "set.shop_info_sub": "Manzil va mijozlar uchun ko'rinadigan ma'lumotlar",
     "set.apprentices": "Shogirdlar",
     "set.apprentices_sub": "Qo'shish, faollashtirish / o'chirish, olib tashlash",
     "set.services": "Xizmatlar va narxlar",
@@ -201,6 +204,14 @@ const STRINGS = {
     "srv.price": "Narx",
     "srv.duration": "Davomiyligi (daq)",
     "srv.now": "Hozir:",
+
+    // ---- shop info page ----
+    "shop.title": "Do'kon ma'lumotlari",
+    "shop.sub": "Mijozlar yozilganda ko'radigan ma'lumotlar",
+    "shop.location_label": "Manzil",
+    "shop.location_hint": "Mijoz bu manzilni yozuv tasdiqlash xabarida ko'radi. Bo'sh qoldirilsa, ko'rsatilmaydi.",
+    "shop.location_placeholder": "Toshkent, Mirzo Ulug'bek tumani, 12-uy",
+    "shop.location_saved": "Saqlandi ✓",
 
     // ---- clients page ----
     "cli.title": "Mijozlar bazasi",
@@ -263,7 +274,7 @@ const STRINGS = {
     "landing.tap_to_book": "Записаться сейчас",
     "landing.finding_slot": "Подбираем время…",
     "landing.no_slot": "Сегодня мест нет",
-    "landing.different_time": "📅 Выбрать другое время",
+    "landing.different_time": "🕒 Выбрать другое время",
     "landing.hide_other_times": "Скрыть",
     "landing.no_slots_day": "На этот день мест нет.",
     "landing.barber": "Мастер",
@@ -301,6 +312,7 @@ const STRINGS = {
     "confirm.duration": "Длительность",
     "confirm.extras": "Доп.",
     "confirm.total": "Итого",
+    "confirm.location": "Адрес",
     "confirm.reminder_on": "🔔 Напоминание ВКЛ — пришлём за 15 мин",
     "confirm.reminder_off": "🔕 Напоминание ВЫКЛ — нажмите чтобы включить",
     "confirm.close": "Закрыть",
@@ -361,6 +373,8 @@ const STRINGS = {
     "tab.confirm_block": "Подтвердить",
 
     "set.title": "Настройки",
+    "set.shop_info": "Информация о заведении",
+    "set.shop_info_sub": "Адрес и публичные данные о парикмахерской",
     "set.apprentices": "Ученики",
     "set.apprentices_sub": "Добавить, активировать / деактивировать, удалить",
     "set.services": "Услуги и цены",
@@ -399,6 +413,13 @@ const STRINGS = {
     "srv.price": "Цена",
     "srv.duration": "Длительность (мин)",
     "srv.now": "Сейчас:",
+
+    "shop.title": "Информация о заведении",
+    "shop.sub": "Данные, которые видит клиент при записи",
+    "shop.location_label": "Адрес",
+    "shop.location_hint": "Клиент увидит этот адрес в сообщении-подтверждении записи. Оставьте пустым, чтобы не показывать.",
+    "shop.location_placeholder": "Ташкент, ул. Амира Темура, 12",
+    "shop.location_saved": "Сохранено ✓",
 
     "cli.title": "База клиентов",
     "cli.record": "запись",
@@ -459,7 +480,7 @@ const STRINGS = {
     "landing.tap_to_book": "Tap to book now",
     "landing.finding_slot": "Finding slot…",
     "landing.no_slot": "No slot today",
-    "landing.different_time": "📅 Book a different time",
+    "landing.different_time": "🕒 Book a different time",
     "landing.hide_other_times": "Hide",
     "landing.no_slots_day": "No slots available on this day.",
     "landing.barber": "Barber",
@@ -497,6 +518,7 @@ const STRINGS = {
     "confirm.duration": "Duration",
     "confirm.extras": "Extras",
     "confirm.total": "Total",
+    "confirm.location": "Location",
     "confirm.reminder_on": "🔔 Reminder ON — we'll ping you 15 min before",
     "confirm.reminder_off": "🔕 Reminder OFF — tap to re-enable",
     "confirm.close": "Close",
@@ -557,6 +579,8 @@ const STRINGS = {
     "tab.confirm_block": "Confirm",
 
     "set.title": "Settings",
+    "set.shop_info": "Shop info",
+    "set.shop_info_sub": "Address and customer-visible details",
     "set.apprentices": "Apprentices",
     "set.apprentices_sub": "Add, activate / deactivate, or remove",
     "set.services": "Services & pricing",
@@ -595,6 +619,13 @@ const STRINGS = {
     "srv.price": "Price",
     "srv.duration": "Duration (min)",
     "srv.now": "Now:",
+
+    "shop.title": "Shop info",
+    "shop.sub": "Details customers see when they book",
+    "shop.location_label": "Address",
+    "shop.location_hint": "Customers will see this in the booking confirmation message. Leave empty to hide.",
+    "shop.location_placeholder": "12 Amir Temur St, Tashkent",
+    "shop.location_saved": "Saved ✓",
 
     "cli.title": "Client database",
     "cli.record": "record",
