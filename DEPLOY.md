@@ -549,6 +549,96 @@ sudo systemctl restart cloudflared
 
 ---
 
+## 6.5. Adding the operator (`barber-dev`) bot to the same VPS
+
+The `apps/barber-dev/` workspace ships an *operator* bot — a separate Telegram bot you and your developers use to manage the fleet (shops, fees, feature toggles, weekly + monthly reminders). It runs on the same VPS as the shop bots, talks to a **separate control database**, and uses long-polling so it needs no public hostname.
+
+### 6.5.1 Create the second Telegram bot
+
+In [@BotFather](https://t.me/BotFather): `/newbot` → e.g. *"Barber Ops"* → copy the new token. This is a different token from any shop bot.
+
+### 6.5.2 Create the control database
+
+```bash
+docker exec -it barber-brone-postgres psql -U barber -d postgres -c "CREATE DATABASE barber_control;"
+```
+
+### 6.5.3 Configure `apps/barber-dev/.env`
+
+```bash
+cp apps/barber-dev/.env.example apps/barber-dev/.env
+nano apps/barber-dev/.env
+```
+
+```ini
+NODE_ENV=production
+BARBER_DEV_BOT_TOKEN=<from BotFather, step 6.5.1>
+OPERATOR_TELEGRAM_IDS=<your TG ID>,<other dev TG IDs>     # first = super operator
+DATABASE_URL=postgresql://barber:STRONG_PASSWORD@localhost:5432/barber_control?schema=public
+TIMEZONE=Asia/Tashkent
+TELEGRAM_WEBHOOK_URL=
+TELEGRAM_WEBHOOK_SECRET=
+```
+
+### 6.5.4 Migrate, seed, build, start
+
+```bash
+npm --workspace apps/barber-dev exec -- prisma migrate deploy
+npm --workspace apps/barber-dev run db:seed                  # creates Operator rows from OPERATOR_TELEGRAM_IDS
+npm --workspace apps/barber-dev run build
+
+# Start under PM2 — already in ecosystem.config.js as "barber-operator"
+pm2 start ecosystem.config.js --only barber-operator
+pm2 save
+pm2 logs barber-operator --lines 40
+# Expected: "✓ barber-dev bot @<your-bot> started (long-polling)"
+#           "✓ barber-dev reminder crons scheduled (timezone: Asia/Tashkent)"
+```
+
+### 6.5.5 Register your first shop from the operator bot
+
+In Telegram, message your **operator** bot:
+
+```
+/start
+/addshop downtown "Downtown Barbershop" 707841575 postgresql://barber:STRONG_PASSWORD@localhost:5432/barber_brone?schema=public
+/setfee downtown 500000
+/shops
+```
+
+Notes on `/addshop`:
+- The `dbUrl` lets the operator bot read revenue + write apprentice/location settings on the shop's DB.
+- For shops not on this server, you can omit the dbUrl (the bot will skip remote operations); fees still get tracked.
+
+### 6.5.6 Verify the reminders
+
+```bash
+# In a psql session against barber_control:
+docker exec -it barber-brone-postgres psql -U barber -d barber_control -c "SELECT * FROM \"Operator\";"
+# Expect: your TG ID, isSuper=true
+```
+
+The monthly billing cron fires at **09:00 on day 1** of each month (Asia/Tashkent by default). The weekly quality cron fires at **09:00 every Monday**. If the VPS was off when the canonical time passed, the hourly catch-up tick fires lazily once the box is back up.
+
+To trigger a billing reminder *right now* for testing, use `/billing` in the operator bot — it produces the same summary the cron would send.
+
+### 6.5.7 Adding more developers
+
+Once running, the *super operator* (first ID in `OPERATOR_TELEGRAM_IDS`) can promote other devs from inside the bot:
+
+```
+/addop 123456789 Aziz
+/operators
+```
+
+Each new operator can also use every command — except `/addop` and `/removeop`, which stay super-only.
+
+### 6.5.8 What if I want the operator bot on a different VPS?
+
+It works fine — but you'll need to expose each shop's Postgres to that other VPS (Cloudflare Tunnel, Tailscale, or a private network). The simplest setup remains "all on one VPS": one Postgres container, two databases (`barber_brone`, `barber_control`), two PM2 entries.
+
+---
+
 ## 7. Operations
 
 ### 7.1 Updating to a new release
@@ -623,6 +713,9 @@ You get TLS automatically — Cloudflare terminates HTTPS at the edge. In Cloudf
 | Webhook never gets called → `getWebhookInfo` shows old URL | After changing `TELEGRAM_WEBHOOK_URL`, **restart the backend** (`pm2 restart barber-backend`) — the URL is registered at startup, not on every request. |
 | Mini App opens but `/api/me` returns 401 in browser | Telegram Mini Apps only inject `initData` when opened **from inside Telegram**. Testing the URL in a regular browser will always 401. Always test by tapping the bot's menu button in Telegram. |
 | Bot in long-polling mode AND webhook configured → duplicate updates | grammY auto-deletes the webhook before starting long-polling. If you suspect this, run: `curl https://api.telegram.org/bot<TOKEN>/deleteWebhook` once. |
+| Operator bot's monthly cron fires twice (once at canonical time, once on hourly catch-up) | The `ReminderTick` table debounces per `monthly_billing:YYYY-MM` key — only one DM goes out. Safe by design. |
+| Shop's apprentice toggle didn't take effect | The Mini App re-reads `/api/me` on focus (visibility-change revalidation). If the user kept the app foregrounded the whole time, ask them to background + foreground it. Backend reflects DB changes immediately. |
+| Operator bot can't reach a shop's DB after a Postgres password rotation | Update the shop's `dbUrl` in `Shop` table: in operator bot, the shortcut is to remove + re-add with `/addshop` (it upserts on slug). |
 | Date pickers / time zones look weird | Backend stores UTC, formats in `SHOP_TIMEZONE` (default `Asia/Tashkent`). To run a shop in another zone, change that env var and restart. |
 | Postgres ran out of disk → bot dies silently | `df -h` regularly. Set up an UptimeRobot keyword check for `"ok":true` in the healthz response. |
 | Lightsail snapshot isn't a real backup | Snapshots cover the whole disk but only restore to a new Lightsail instance in the same region. Plus the database is in Docker — snapshots may capture mid-transaction state. **Use the `pg_dumpall` cron above** as your real backup. |
@@ -645,40 +738,49 @@ You get TLS automatically — Cloudflare terminates HTTPS at the edge. In Cloudf
 
 ```bash
 # Status
-pm2 status
+pm2 status                        # both barber-backend and barber-operator
 systemctl status nginx cloudflared
 docker compose ps
 
 # Logs (live)
-pm2 logs barber-backend
+pm2 logs barber-backend           # shop bot + Mini App API
+pm2 logs barber-operator          # operator/fleet bot
 journalctl -u cloudflared -f
 docker logs -f barber-brone-postgres
 
-# Deploy a new version
-cd /srv/Barber-brone && git pull && npm ci && \
-  npm --workspace apps/backend exec -- prisma migrate deploy && \
-  npm --workspace apps/backend run build && \
-  npm --workspace apps/webapp run build && \
-  sudo cp -r apps/webapp/dist/* /var/www/barber-webapp/ && \
-  pm2 reload barber-backend
+# One-shot deploy (pulls main, migrates BOTH DBs, builds both bots, reloads PM2)
+sudo -u barber bash /srv/Barber-brone/scripts/deploy.sh
+
+# Deploy only the shop bot
+SKIP_OPERATOR=1 sudo -u barber bash /srv/Barber-brone/scripts/deploy.sh
+
+# Deploy only the operator bot
+SKIP_BACKEND=1 sudo -u barber bash /srv/Barber-brone/scripts/deploy.sh
 
 # Roll back
-cd /srv/Barber-brone && git log --oneline -10        # find the commit
+cd /srv/Barber-brone && git log --oneline -10
 git checkout <commit-sha>
-# rebuild as above, then `pm2 reload`
+sudo -u barber bash scripts/deploy.sh   # rebuilds both at the rolled-back SHA
 
-# Database shell
-docker exec -it barber-brone-postgres psql -U barber -d barber_brone
+# Database shells
+docker exec -it barber-brone-postgres psql -U barber -d barber_brone     # shop data
+docker exec -it barber-brone-postgres psql -U barber -d barber_control   # operator/control data
 
-# Restore from backup
+# Restore from backup (pg_dumpall covers BOTH databases)
 gunzip -c /var/backups/barber/all_<TS>.sql.gz | docker exec -i barber-brone-postgres psql -U barber -d postgres
 
-# Add another bot
-# 1. Get bot token from @BotFather, admin Telegram ID from @userinfobot
-# 2. CREATE DATABASE shopN_db; in psql
-# 3. Clone repo into /srv/Barber-brone-shopN
-# 4. Edit apps/backend/.env (port, token, DB)
-# 5. Add to ecosystem.config.js
-# 6. Add nginx server block + cloudflared ingress
+# Operator bot: trigger reminders manually (no waiting for cron)
+# In your operator bot's Telegram chat:
+#   /billing   — preview & DM all operators this month's pending fees
+#   /shops     — current revenue + fee status per shop
+
+# Add another shop (multi-bot architecture, see §6)
+# 1. New bot token from @BotFather, owner's Telegram ID from @userinfobot
+# 2. docker exec -it barber-brone-postgres psql -U barber -c "CREATE DATABASE shopN_db;"
+# 3. Clone repo into /srv/Barber-brone-shopN (per-shop folder) OR add another PM2 instance
+# 4. Edit apps/backend/.env (PORT=300N, token, DB)
+# 5. Append to ecosystem.config.js
+# 6. Add nginx server block + cloudflared ingress for shopN.yourdomain.com
 # 7. pm2 start /srv/ecosystem.config.js && sudo systemctl reload nginx cloudflared
+# 8. In operator bot chat: /addshop shopN "Shop Name" <ownerTgId> <dbUrl>
 ```
