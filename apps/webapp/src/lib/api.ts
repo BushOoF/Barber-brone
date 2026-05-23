@@ -56,6 +56,8 @@ export const api = {
     adults: number;
     children: number;
     services: string[];
+    selectedAdultStyleKey?: string | null;
+    selectedChildStyleKey?: string | null;
     remindersOn: boolean;
   }) => request<{ booking: Booking; quote: PriceQuote }>("/api/bookings", { method: "POST", body: JSON.stringify(body) }),
   myBookings: () => request<{ bookings: BookingWithBarber[] }>("/api/bookings/mine"),
@@ -107,8 +109,21 @@ export const api = {
   adminDeleteApprentice: (id: string) =>
     request<{ deletedId: string }>(`/api/admin/apprentices/${id}`, { method: "DELETE" }),
 
-  adminUpdateService: (id: string, patch: { name?: string; durationMin?: number; priceMinor?: number; isActive?: boolean }) =>
+  adminUpdateService: (id: string, patch: { name?: string; durationMin?: number; priceMinor?: number; isActive?: boolean; isDefault?: boolean }) =>
     request<{ service: ServiceDef }>(`/api/admin/services/${id}`, { method: "PUT", body: JSON.stringify(patch) }),
+  adminCreateService: (body: { name: string; category: ServiceCategory; priceMinor: number; durationMin: number; isDefault?: boolean }) =>
+    request<{ service: ServiceDef }>("/api/admin/services", { method: "POST", body: JSON.stringify(body) }),
+  adminDeleteService: (id: string) =>
+    request<{ deletedId: string }>(`/api/admin/services/${id}`, { method: "DELETE" }),
+
+  // ---- Announcements ----
+  adminListAnnouncements: () =>
+    request<{ announcements: Announcement[] }>("/api/admin/announcements"),
+  adminSendAnnouncement: (message: string) =>
+    request<{ announcement: { id: string; recipients: number; delivered: number; failed: number } }>(
+      "/api/admin/announcements",
+      { method: "POST", body: JSON.stringify({ message }) },
+    ),
 
   adminListUsers: (search?: string) =>
     request<{ users: AdminUser[] }>(`/api/admin/users${search ? `?search=${encodeURIComponent(search)}` : ""}`),
@@ -173,14 +188,27 @@ export interface AdminUser {
   createdAt: string;
 }
 
+export type ServiceCategory = "HAIRCUT_ADULT" | "HAIRCUT_CHILD" | "ADDON";
+
 export interface ServiceDef {
   id: string;
   key: string;
   name: string;
+  category: ServiceCategory;
+  isDefault: boolean;
   durationMin: number;
   priceMinor: number;
   isActive: boolean;
   sortOrder: number;
+}
+
+export interface Announcement {
+  id: string;
+  message: string;
+  recipients: number;
+  delivered: number;
+  failed: number;
+  createdAt: string;
 }
 
 export interface NextSlotResponse {
@@ -211,6 +239,8 @@ export interface Booking {
   adults: number;
   children: number;
   services: string[];
+  selectedAdultStyleKey: string | null;
+  selectedChildStyleKey: string | null;
   status: "SCHEDULED" | "COMPLETED" | "CANCELLED_BY_USER" | "DISCARDED_NO_SHOW" | "TRANSFERRED";
   remindersOn: boolean;
   user?: { id: string; firstName: string | null; lastName: string | null; username: string | null; phone: string | null };

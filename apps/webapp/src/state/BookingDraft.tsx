@@ -7,6 +7,9 @@ export interface BookingDraft {
   adults: number;
   children: number;
   optional: string[];
+  /** Service.key of the picked adult haircut style; null/undefined = use the default. */
+  selectedAdultStyleKey: string | null;
+  selectedChildStyleKey: string | null;
   remindersOn: boolean;
 }
 
@@ -16,6 +19,8 @@ const DEFAULT: BookingDraft = {
   adults: 1,
   children: 0,
   optional: [],
+  selectedAdultStyleKey: null,
+  selectedChildStyleKey: null,
   remindersOn: true,
 };
 

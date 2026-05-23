@@ -37,6 +37,13 @@ export function Settings({ me }: { me: MeResponse }) {
           onClick={() => nav("/settings/services")}
         />
         <ListItem
+          leading={<IconBadge emoji="📢" />}
+          title={t("set.announcements")}
+          subtitle={t("set.announcements_sub")}
+          trailing={<Chevron />}
+          onClick={() => nav("/settings/announcements")}
+        />
+        <ListItem
           leading={<IconBadge emoji="📒" />}
           title={t("set.clients")}
           subtitle={t("set.clients_sub")}

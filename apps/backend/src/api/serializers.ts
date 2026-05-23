@@ -29,6 +29,8 @@ export function serializeService(s: Service) {
     id: s.id,
     key: s.key,
     name: s.name,
+    category: s.category,
+    isDefault: s.isDefault,
     durationMin: s.durationMin,
     priceMinor: s.priceMinor,
     isActive: s.isActive,
@@ -48,6 +50,8 @@ export function serializeBooking(b: Booking & { user?: User | null }) {
     adults: b.adults,
     children: b.children,
     services: b.services,
+    selectedAdultStyleKey: b.selectedAdultStyleKey,
+    selectedChildStyleKey: b.selectedChildStyleKey,
     status: b.status,
     remindersOn: b.remindersOn,
     user: b.user ? {

@@ -1,29 +1,50 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { api, type MeResponse } from "../lib/api";
+import { api, type MeResponse, type ServiceDef } from "../lib/api";
 import { useApi } from "../hooks/useApi";
 import { useBookingDraft } from "../state/BookingDraft";
 import { PartyStepper } from "../components/PartyStepper";
 import { ServiceCheckboxes } from "../components/ServiceCheckboxes";
+import { StylePickerSheet } from "../components/StylePickerSheet";
 import { Button } from "../components/ui/Button";
-import { clientQuote, serviceKeysFromSelection } from "../lib/pricing";
+import {
+  clientQuote,
+  effectiveAdultStyle,
+  effectiveChildStyle,
+  serviceKeysFromSelection,
+} from "../lib/pricing";
 import { haptic } from "../lib/telegram";
 import { formatMoney, formatDuration, formatTime } from "../lib/format";
-import { useT } from "../state/Lang";
+import { useT, useLang } from "../state/Lang";
+import { localizedServiceName } from "../lib/i18n";
 
 export function Configure({ me }: { me: MeResponse }) {
   const nav = useNavigate();
   const t = useT();
+  const lang = useLang();
   const { draft, set } = useBookingDraft();
   const servicesQ = useApi(() => api.services(), []);
   const services = servicesQ.data?.services ?? [];
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [stylePicker, setStylePicker] = useState<"adult" | "child" | null>(null);
+
+  const adultStyles = useMemo(() => services.filter((s) => s.category === "HAIRCUT_ADULT" && s.isActive), [services]);
+  const childStyles = useMemo(() => services.filter((s) => s.category === "HAIRCUT_CHILD" && s.isActive), [services]);
+
+  const adultPicked = effectiveAdultStyle(services, draft.selectedAdultStyleKey);
+  const childPicked = effectiveChildStyle(services, draft.selectedChildStyleKey);
 
   const quote = useMemo(
-    () => clientQuote(services, { adults: draft.adults, children: draft.children, optional: draft.optional }),
-    [services, draft.adults, draft.children, draft.optional],
+    () => clientQuote(services, {
+      adults: draft.adults,
+      children: draft.children,
+      optional: draft.optional,
+      selectedAdultStyleKey: draft.selectedAdultStyleKey,
+      selectedChildStyleKey: draft.selectedChildStyleKey,
+    }),
+    [services, draft.adults, draft.children, draft.optional, draft.selectedAdultStyleKey, draft.selectedChildStyleKey],
   );
 
   if (!draft.startAt || !draft.barberId) {
@@ -59,6 +80,8 @@ export function Configure({ me }: { me: MeResponse }) {
           children: draft.children,
           optional: draft.optional,
         }),
+        selectedAdultStyleKey: draft.selectedAdultStyleKey,
+        selectedChildStyleKey: draft.selectedChildStyleKey,
         remindersOn: draft.remindersOn,
       });
       haptic("success");
@@ -119,11 +142,34 @@ export function Configure({ me }: { me: MeResponse }) {
 
         <section className="space-y-2">
           <h2 className="text-[11px] font-bold uppercase tracking-wider text-tg-hint">{t("configure.services_section")}</h2>
+
+          {/* Locked haircut row(s) + inline style picker chip */}
+          {draft.adults > 0 && adultPicked ? (
+            <LockedHaircutRow
+              icon="💈"
+              style={adultPicked}
+              currency={me.shop.currency}
+              subtitle={t("configure.required_per_adult")}
+              localizedName={localizedServiceName(lang, adultPicked.key, adultPicked.name)}
+              extraStyles={adultStyles.length}
+              onOpenPicker={() => adultStyles.length > 1 && setStylePicker("adult")}
+            />
+          ) : null}
+          {draft.children > 0 && childPicked ? (
+            <LockedHaircutRow
+              icon="🧒"
+              style={childPicked}
+              currency={me.shop.currency}
+              subtitle={t("configure.required_per_child")}
+              localizedName={localizedServiceName(lang, childPicked.key, childPicked.name)}
+              extraStyles={childStyles.length}
+              onOpenPicker={() => childStyles.length > 1 && setStylePicker("child")}
+            />
+          ) : null}
+
           <ServiceCheckboxes
             services={services}
             optional={draft.optional}
-            hasAdults={draft.adults > 0}
-            hasChildren={draft.children > 0}
             currency={me.shop.currency}
             onToggle={toggleOptional}
           />
@@ -155,6 +201,79 @@ export function Configure({ me }: { me: MeResponse }) {
           {submitting ? t("configure.booking") : t("configure.book")}
         </Button>
       </footer>
+
+      <StylePickerSheet
+        open={stylePicker === "adult"}
+        styles={adultStyles}
+        selectedKey={draft.selectedAdultStyleKey}
+        context="adult"
+        currency={me.shop.currency}
+        onPick={(key) => set({ selectedAdultStyleKey: key })}
+        onClose={() => setStylePicker(null)}
+      />
+      <StylePickerSheet
+        open={stylePicker === "child"}
+        styles={childStyles}
+        selectedKey={draft.selectedChildStyleKey}
+        context="child"
+        currency={me.shop.currency}
+        onPick={(key) => set({ selectedChildStyleKey: key })}
+        onClose={() => setStylePicker(null)}
+      />
     </motion.div>
+  );
+}
+
+function LockedHaircutRow({
+  icon,
+  style,
+  currency,
+  subtitle,
+  localizedName,
+  extraStyles,
+  onOpenPicker,
+}: {
+  icon: string;
+  style: ServiceDef;
+  currency: string;
+  subtitle: string;
+  localizedName: string;
+  /** How many active styles exist in this category. Picker chip only shown if >1. */
+  extraStyles: number;
+  onOpenPicker: () => void;
+}) {
+  const t = useT();
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-3 rounded-2xl bg-tg-button/12 px-4 py-3 ring-2 ring-tg-button shadow-soft">
+        <span className="shrink-0 text-xl">{icon}</span>
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-tg-button text-tg-buttonText">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <path d="M6 10V8a6 6 0 1112 0v2" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+            <rect x="4" y="10" width="16" height="11" rx="2" fill="currentColor" />
+          </svg>
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-base font-bold">{localizedName}</div>
+          <div className="text-xs text-tg-hint">
+            {subtitle} · {formatDuration(style.durationMin)} · {formatMoney(style.priceMinor, currency)}
+          </div>
+        </div>
+      </div>
+
+      {extraStyles > 1 ? (
+        <button
+          type="button"
+          onClick={onOpenPicker}
+          className="ml-9 inline-flex items-center gap-1.5 rounded-full bg-surface-1 px-3 py-1.5 text-xs font-bold text-tg-text ring-1 ring-line-strong active:scale-95"
+        >
+          <span>✂️</span>
+          <span>{t("style.choose")}: {localizedName}</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+            <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      ) : null}
+    </div>
   );
 }

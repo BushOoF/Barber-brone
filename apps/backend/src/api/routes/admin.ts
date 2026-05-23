@@ -4,6 +4,7 @@ import { requireAdmin, requireAuth } from "../auth.js";
 import { prisma } from "../../lib/prisma.js";
 import { localDayBoundsUtc } from "../../lib/time.js";
 import { serializeBarber, serializeService, serializeUser } from "../serializers.js";
+import { broadcastAnnouncement } from "../../services/announcements.js";
 
 export async function adminRoutes(app: FastifyInstance) {
   app.addHook("preHandler", requireAuth);
@@ -12,8 +13,79 @@ export async function adminRoutes(app: FastifyInstance) {
   // ---- Services ----
   app.get("/api/admin/services", async () => {
     // Includes inactive services so the admin can re-enable them.
-    const services = await prisma.service.findMany({ orderBy: { sortOrder: "asc" } });
+    const services = await prisma.service.findMany({
+      orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
+    });
     return { services: services.map(serializeService) };
+  });
+
+  // Create a new service (typically a new haircut style, e.g. "Fade", "Pompadour")
+  app.post("/api/admin/services", async (req, reply) => {
+    const body = z
+      .object({
+        name: z.string().min(1).max(80),
+        category: z.enum(["HAIRCUT_ADULT", "HAIRCUT_CHILD", "ADDON"]),
+        priceMinor: z.number().int().min(0),
+        durationMin: z.number().int().min(1).max(480),
+        isDefault: z.boolean().optional().default(false),
+      })
+      .safeParse(req.body);
+    if (!body.success) return reply.code(400).send({ error: "bad_request", details: body.error.flatten() });
+
+    // Generate a stable, unique key from the name (lowercased, alphanumeric, with category prefix).
+    const slug = body.data.name
+      .toLowerCase()
+      .normalize("NFKD")
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_|_$/g, "")
+      .slice(0, 40);
+    const prefix =
+      body.data.category === "HAIRCUT_ADULT" ? "haircut_adult"
+      : body.data.category === "HAIRCUT_CHILD" ? "haircut_child"
+      : "addon";
+    let key = `${prefix}_${slug || Date.now()}`;
+    // Ensure uniqueness in case of collisions.
+    while (await prisma.service.findUnique({ where: { key } })) {
+      key = `${prefix}_${slug || "x"}_${Math.floor(Math.random() * 1000)}`;
+    }
+
+    // If isDefault=true, clear the existing default in this category first.
+    if (body.data.isDefault && body.data.category !== "ADDON") {
+      await prisma.service.updateMany({
+        where: { category: body.data.category, isDefault: true },
+        data: { isDefault: false },
+      });
+    }
+
+    const maxSort = await prisma.service.aggregate({ _max: { sortOrder: true } });
+    const service = await prisma.service.create({
+      data: {
+        key,
+        name: body.data.name,
+        category: body.data.category,
+        priceMinor: body.data.priceMinor,
+        durationMin: body.data.durationMin,
+        isDefault: body.data.isDefault,
+        isActive: true,
+        sortOrder: (maxSort._max.sortOrder ?? 0) + 10,
+      },
+    });
+    return reply.code(201).send({ service: serializeService(service) });
+  });
+
+  app.delete("/api/admin/services/:id", async (req, reply) => {
+    const params = z.object({ id: z.string() }).safeParse(req.params);
+    if (!params.success) return reply.code(400).send({ error: "bad_request" });
+    const svc = await prisma.service.findUnique({ where: { id: params.data.id } });
+    if (!svc) return reply.code(404).send({ error: "not_found" });
+    if (svc.isDefault) {
+      return reply.code(409).send({
+        error: "is_default",
+        message: "Cannot delete the default haircut style. Mark another style as default first.",
+      });
+    }
+    await prisma.service.delete({ where: { id: svc.id } });
+    return { deletedId: svc.id };
   });
 
   app.put("/api/admin/services/:id", async (req, reply) => {
@@ -24,11 +96,64 @@ export async function adminRoutes(app: FastifyInstance) {
         durationMin: z.number().int().positive().optional(),
         priceMinor: z.number().int().min(0).optional(),
         isActive: z.boolean().optional(),
+        isDefault: z.boolean().optional(),
       })
       .safeParse(req.body);
     if (!params.success || !body.success) return reply.code(400).send({ error: "bad_request" });
+
+    const existing = await prisma.service.findUnique({ where: { id: params.data.id } });
+    if (!existing) return reply.code(404).send({ error: "not_found" });
+
+    // Promoting a style to default? Clear the existing default in the same category first.
+    if (body.data.isDefault === true && existing.category !== "ADDON") {
+      await prisma.service.updateMany({
+        where: { category: existing.category, isDefault: true, NOT: { id: existing.id } },
+        data: { isDefault: false },
+      });
+    }
+    // Don't allow un-marking the only default in a haircut category.
+    if (body.data.isDefault === false && existing.isDefault && existing.category !== "ADDON") {
+      const otherDefaults = await prisma.service.count({
+        where: { category: existing.category, isDefault: true, NOT: { id: existing.id } },
+      });
+      if (otherDefaults === 0) {
+        return reply.code(409).send({
+          error: "cannot_unmark_only_default",
+          message: "Promote another style to default before unmarking this one.",
+        });
+      }
+    }
+
     const updated = await prisma.service.update({ where: { id: params.data.id }, data: body.data });
     return { service: serializeService(updated) };
+  });
+
+  // ---- Announcements ----
+  app.get("/api/admin/announcements", async () => {
+    const list = await prisma.announcement.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+    return {
+      announcements: list.map((a) => ({
+        id: a.id,
+        message: a.message,
+        recipients: a.recipients,
+        delivered: a.delivered,
+        failed: a.failed,
+        createdAt: a.createdAt.toISOString(),
+      })),
+    };
+  });
+
+  app.post("/api/admin/announcements", async (req, reply) => {
+    const body = z.object({ message: z.string().min(1).max(2000) }).safeParse(req.body);
+    if (!body.success) return reply.code(400).send({ error: "bad_request", details: body.error.flatten() });
+    const { user } = req.auth!;
+    // Broadcast is best-effort: we return as soon as it's done. For very large
+    // customer bases (>1k) consider switching to a job queue.
+    const result = await broadcastAnnouncement(body.data.message, user.id);
+    return reply.code(201).send({ announcement: result });
   });
 
   // ---- Apprentices ----

@@ -11,6 +11,7 @@ import { ServicesPage } from "./pages/settings/Services";
 import { ClientsPage } from "./pages/settings/Clients";
 import { FinancesPage } from "./pages/settings/Finances";
 import { ShopInfoPage } from "./pages/settings/ShopInfo";
+import { AnnouncementsPage } from "./pages/settings/Announcements";
 import { LangProvider } from "./state/Lang";
 import { DEFAULT_LANG, translate, type Lang } from "./lib/i18n";
 
@@ -55,6 +56,10 @@ export function App() {
         <Route
           path="/settings/services"
           element={isAdmin ? <ServicesPage me={data} /> : <Navigate to="/dashboard" replace />}
+        />
+        <Route
+          path="/settings/announcements"
+          element={isAdmin ? <AnnouncementsPage /> : <Navigate to="/dashboard" replace />}
         />
         <Route path="/settings/clients" element={isAdmin ? <ClientsPage /> : <Navigate to="/dashboard" replace />} />
         <Route
