@@ -119,11 +119,22 @@ export const api = {
   // ---- Announcements ----
   adminListAnnouncements: () =>
     request<{ announcements: Announcement[] }>("/api/admin/announcements"),
-  adminSendAnnouncement: (message: string) =>
-    request<{ announcement: { id: string; recipients: number; delivered: number; failed: number } }>(
-      "/api/admin/announcements",
-      { method: "POST", body: JSON.stringify({ message }) },
-    ),
+  adminSendAnnouncement: (message: string, photo?: File | null) => {
+    if (photo) {
+      const fd = new FormData();
+      fd.append("message", message);
+      fd.append("photo", photo, photo.name);
+      // Don't set Content-Type — fetch sets multipart/form-data with boundary automatically.
+      return request<{ announcement: AnnouncementSendResult }>("/api/admin/announcements", {
+        method: "POST",
+        body: fd,
+      });
+    }
+    return request<{ announcement: AnnouncementSendResult }>("/api/admin/announcements", {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    });
+  },
 
   adminListUsers: (search?: string) =>
     request<{ users: AdminUser[] }>(`/api/admin/users${search ? `?search=${encodeURIComponent(search)}` : ""}`),
@@ -205,10 +216,21 @@ export interface ServiceDef {
 export interface Announcement {
   id: string;
   message: string;
+  photoFileId: string | null;
+  photoName: string | null;
   recipients: number;
   delivered: number;
   failed: number;
   createdAt: string;
+}
+
+export interface AnnouncementSendResult {
+  id: string;
+  recipients: number;
+  delivered: number;
+  failed: number;
+  photoFileId: string | null;
+  photoName: string | null;
 }
 
 export interface NextSlotResponse {

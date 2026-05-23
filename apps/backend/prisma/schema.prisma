@@ -138,6 +138,12 @@ model TimeBlock {
 model Announcement {
   id           String   @id @default(cuid())
   message      String
+  /// Telegram file_id captured from the first sendPhoto. Reusing it for every
+  /// subsequent recipient avoids re-uploading the bytes to Telegram for each
+  /// customer. Null when the announcement was text-only.
+  photoFileId  String?
+  /// Original filename of the uploaded image — for display in history.
+  photoName    String?
   sentByUserId String
   sentBy       User     @relation(fields: [sentByUserId], references: [id])
   recipients   Int      @default(0)

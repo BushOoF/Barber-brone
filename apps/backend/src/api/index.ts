@@ -1,5 +1,6 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import multipart from "@fastify/multipart";
 import { webhookCallback } from "grammy";
 import { bot } from "../bot/index.js";
 import { env, isProd } from "../lib/env.js";
@@ -23,6 +24,17 @@ export async function buildServer() {
   });
 
   const allowedOrigins = new Set<string>([env.WEBAPP_URL, ...env.CORS_EXTRA_ORIGINS]);
+  // Announcement broadcasts can attach a photo (Telegram caps photos at 10 MB).
+  // Other JSON endpoints are unaffected — multipart only kicks in when
+  // Content-Type is multipart/form-data.
+  await app.register(multipart, {
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10 MB — Telegram's sendPhoto ceiling
+      files: 1,
+      fields: 10,
+    },
+  });
+
   await app.register(cors, {
     origin: (origin, cb) => {
       if (!origin) return cb(null, true); // server-to-server, native app, etc.

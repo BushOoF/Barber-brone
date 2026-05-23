@@ -249,6 +249,12 @@ const STRINGS = {
     "ann.history_empty": "Hozircha hech narsa yuborilmagan.",
     "ann.stat_delivered": "yetkazildi",
     "ann.stat_failed": "muvaffaqiyatsiz",
+    "ann.attach_photo": "📷 Rasm",
+    "ann.remove_photo": "Rasmni o'chirish",
+    "ann.photo_too_large": "Rasm 10 MB dan kichik bo'lishi kerak.",
+    "ann.caption_too_long": "Rasm bilan birga eng ko'pi bilan 1024 ta belgi yuborish mumkin.",
+    "ann.has_photo": "Rasmli",
+    "ann.compose_placeholder_with_photo": "Rasm ostiga izoh (ixtiyoriy)…",
 
     // ---- clients page ----
     "cli.title": "Mijozlar bazasi",
@@ -491,6 +497,12 @@ const STRINGS = {
     "ann.history_empty": "Пока ничего не отправлено.",
     "ann.stat_delivered": "доставлено",
     "ann.stat_failed": "не доставлено",
+    "ann.attach_photo": "📷 Фото",
+    "ann.remove_photo": "Убрать фото",
+    "ann.photo_too_large": "Фото должно быть меньше 10 МБ.",
+    "ann.caption_too_long": "С фото можно отправить не более 1024 символов.",
+    "ann.has_photo": "С фото",
+    "ann.compose_placeholder_with_photo": "Подпись к фото (по желанию)…",
 
     "cli.title": "База клиентов",
     "cli.record": "запись",
@@ -731,6 +743,12 @@ const STRINGS = {
     "ann.history_empty": "Nothing sent yet.",
     "ann.stat_delivered": "delivered",
     "ann.stat_failed": "failed",
+    "ann.attach_photo": "📷 Photo",
+    "ann.remove_photo": "Remove photo",
+    "ann.photo_too_large": "Photo must be under 10 MB.",
+    "ann.caption_too_long": "When sending a photo, the caption can be at most 1024 characters.",
+    "ann.has_photo": "With photo",
+    "ann.compose_placeholder_with_photo": "Caption for the photo (optional)…",
 
     "cli.title": "Client database",
     "cli.record": "record",

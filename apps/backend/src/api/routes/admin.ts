@@ -138,6 +138,8 @@ export async function adminRoutes(app: FastifyInstance) {
       announcements: list.map((a) => ({
         id: a.id,
         message: a.message,
+        photoFileId: a.photoFileId,
+        photoName: a.photoName,
         recipients: a.recipients,
         delivered: a.delivered,
         failed: a.failed,
@@ -146,13 +148,45 @@ export async function adminRoutes(app: FastifyInstance) {
     };
   });
 
+  // Accepts either JSON ({ message }) for text-only, or multipart/form-data
+  // (fields: message + optional file "photo") for photo announcements.
   app.post("/api/admin/announcements", async (req, reply) => {
-    const body = z.object({ message: z.string().min(1).max(2000) }).safeParse(req.body);
-    if (!body.success) return reply.code(400).send({ error: "bad_request", details: body.error.flatten() });
     const { user } = req.auth!;
-    // Broadcast is best-effort: we return as soon as it's done. For very large
-    // customer bases (>1k) consider switching to a job queue.
-    const result = await broadcastAnnouncement(body.data.message, user.id);
+
+    let message = "";
+    let photo: { buffer: Buffer; filename: string; mimetype: string } | undefined;
+
+    if (req.isMultipart()) {
+      const parts = req.parts();
+      for await (const part of parts) {
+        if (part.type === "file" && part.fieldname === "photo") {
+          // Allow JPEG / PNG / WEBP / GIF — Telegram accepts these as photos.
+          if (!/^image\/(jpe?g|png|webp|gif)$/i.test(part.mimetype)) {
+            return reply.code(400).send({ error: "bad_photo_type", message: part.mimetype });
+          }
+          const buffer = await part.toBuffer();
+          if (buffer.length === 0) continue; // empty file input
+          photo = { buffer, filename: part.filename, mimetype: part.mimetype };
+        } else if (part.type === "field" && part.fieldname === "message") {
+          message = String(part.value ?? "").trim();
+        }
+      }
+    } else {
+      const body = z.object({ message: z.string().min(1).max(2000) }).safeParse(req.body);
+      if (!body.success) return reply.code(400).send({ error: "bad_request", details: body.error.flatten() });
+      message = body.data.message;
+    }
+
+    // With a photo, message becomes a caption — Telegram caps captions at 1024.
+    const limit = photo ? 1024 : 2000;
+    if (!photo && message.length === 0) {
+      return reply.code(400).send({ error: "empty_message" });
+    }
+    if (message.length > limit) {
+      return reply.code(400).send({ error: "caption_too_long", limit });
+    }
+
+    const result = await broadcastAnnouncement({ message, photo, sentByUserId: user.id });
     return reply.code(201).send({ announcement: result });
   });
 
