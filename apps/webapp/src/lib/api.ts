@@ -66,6 +66,12 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ remindersOn }),
     }),
+  cancelMyBooking: (id: string) =>
+    request<{ booking: Booking; shifted?: number }>(`/api/bookings/${id}`, { method: "DELETE" }),
+  daySlotsForDuration: (params: { barberId: string; date: string; durationMin: number }) =>
+    request<DaySlotsResponse>(
+      `/api/availability/day?barberId=${encodeURIComponent(params.barberId)}&date=${params.date}&durationMin=${params.durationMin}`,
+    ),
 
   dayForBarber: (barberId: string | undefined, date: string) =>
     request<DayBookingsResponse>(

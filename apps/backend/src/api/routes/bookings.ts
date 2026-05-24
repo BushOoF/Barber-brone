@@ -214,10 +214,12 @@ export async function bookingRoutes(app: FastifyInstance) {
     },
   );
 
-  // Manual time change by staff (swipe-right → "Shift time").
+  // Manual time change. Two callers:
+  //   - Staff via the dashboard (swipe-right → "Shift time")
+  //   - Customer via "My bookings" → Reschedule
+  // Auth: any authenticated user, but they must either own the booking or be staff.
   app.patch(
     "/api/bookings/:id/time",
-    { preHandler: requireStaff },
     async (req, reply) => {
       const params = z.object({ id: z.string() }).safeParse(req.params);
       const body = z.object({ startAt: z.string().datetime() }).safeParse(req.body);
@@ -227,7 +229,11 @@ export async function bookingRoutes(app: FastifyInstance) {
       const booking = await prisma.booking.findUnique({ where: { id: params.data.id } });
       if (!booking) return reply.code(404).send({ error: "not_found" });
       if (booking.status !== "SCHEDULED") return reply.code(409).send({ error: "not_scheduled" });
-      if (user.role === "APPRENTICE" && booking.barberId !== barber!.id) {
+
+      const isOwner = booking.userId === user.id;
+      const isStaff = user.role === "ADMIN" || user.role === "APPRENTICE";
+      if (!isOwner && !isStaff) return reply.code(403).send({ error: "forbidden" });
+      if (isStaff && !isOwner && user.role === "APPRENTICE" && booking.barberId !== barber!.id) {
         return reply.code(403).send({ error: "not_your_booking" });
       }
 
@@ -272,11 +278,14 @@ export async function bookingRoutes(app: FastifyInstance) {
         data: { startAt: newStart, endAt: newEnd },
       });
 
-      // Notify the customer with the appropriate-direction message.
-      if (newStart.getTime() > oldStart.getTime()) {
-        void notifyShiftedLater(updated.id, oldStart);
-      } else if (newStart.getTime() < oldStart.getTime()) {
-        void notifyShiftedEarlier(updated.id, oldStart);
+      // Notify the customer with the appropriate-direction message — but skip
+      // it when the customer rescheduled themselves (they already know).
+      if (!isOwner) {
+        if (newStart.getTime() > oldStart.getTime()) {
+          void notifyShiftedLater(updated.id, oldStart);
+        } else if (newStart.getTime() < oldStart.getTime()) {
+          void notifyShiftedEarlier(updated.id, oldStart);
+        }
       }
 
       return { booking: serializeBooking(updated) };

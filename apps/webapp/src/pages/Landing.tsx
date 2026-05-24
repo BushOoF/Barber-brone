@@ -42,6 +42,9 @@ export function Landing({ me }: { me: MeResponse }) {
     [slotParams.barberId, slotParams.adults, slotParams.children, slotParams.serviceKeys.join(",")],
   );
 
+  const myBookingsQ = useApi(() => api.myBookings(), []);
+  const upcomingCount = myBookingsQ.data?.bookings.length ?? 0;
+
   const slot = nextQ.data?.slot ?? null;
   const [pickCustom, setPickCustom] = useState(false);
 
@@ -61,6 +64,29 @@ export function Landing({ me }: { me: MeResponse }) {
         <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tg-hint">{me.shop.name}</div>
         <h1 className="mt-1 text-3xl font-extrabold tracking-tight">{t("landing.title")}</h1>
       </header>
+
+      {upcomingCount > 0 ? (
+        <button
+          type="button"
+          onClick={() => {
+            haptic("light");
+            nav("/my-bookings");
+          }}
+          className="flex w-full items-center justify-between rounded-2xl bg-tg-button/12 px-4 py-3 text-left ring-1 ring-tg-button/30 transition active:scale-[0.99]"
+        >
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-tg-button">
+              {t("landing.my_bookings")}
+            </div>
+            <div className="text-sm font-bold">
+              {upcomingCount} {upcomingCount === 1 ? t("dash.booking") : t("dash.bookings")}
+            </div>
+          </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-tg-button">
+            <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      ) : null}
 
       <BarberSelector barbers={barbers} selectedId={selectedBarberId} onSelect={(id) => set({ barberId: id })} />
 

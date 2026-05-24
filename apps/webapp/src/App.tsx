@@ -4,6 +4,7 @@ import { api } from "./lib/api";
 import { Landing } from "./pages/Landing";
 import { Configure } from "./pages/Configure";
 import { Confirmation } from "./pages/Confirmation";
+import { MyBookings } from "./pages/MyBookings";
 import { Dashboard } from "./pages/Dashboard";
 import { Settings } from "./pages/Settings";
 import { ApprenticesPage } from "./pages/settings/Apprentices";
@@ -41,6 +42,7 @@ export function App() {
         />
         <Route path="/configure" element={hasPhone ? <Configure me={data} /> : <Navigate to="/" replace />} />
         <Route path="/confirmation/:id" element={<Confirmation me={data} />} />
+        <Route path="/my-bookings" element={hasPhone ? <MyBookings me={data} /> : <Navigate to="/" replace />} />
         <Route path="/dashboard" element={isStaff ? <Dashboard me={data} /> : <Navigate to="/" replace />} />
 
         {/* Admin-only Settings tree */}
