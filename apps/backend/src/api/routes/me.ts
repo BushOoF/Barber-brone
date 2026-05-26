@@ -21,6 +21,8 @@ export async function meRoutes(app: FastifyInstance) {
         openHourMin: settings?.openHourMin ?? 540,
         closeHourMin: settings?.closeHourMin ?? 1260,
         location: settings?.location ?? null,
+        locationLat: settings?.locationLat ?? null,
+        locationLng: settings?.locationLng ?? null,
         hasApprenticeFeature: settings?.hasApprenticeFeature ?? true,
       },
     };

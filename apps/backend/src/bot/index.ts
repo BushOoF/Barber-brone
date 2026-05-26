@@ -19,6 +19,14 @@ function contactRequestKeyboard(lang: Lang) {
   };
 }
 
+function locationRequestKeyboard(lang: Lang) {
+  return {
+    keyboard: [[{ text: t(lang, "bot.share_location_btn"), request_location: true }]],
+    resize_keyboard: true,
+    one_time_keyboard: true,
+  };
+}
+
 async function getUserLang(telegramId: number | bigint): Promise<Lang> {
   const u = await prisma.user.findUnique({
     where: { telegramId: BigInt(telegramId) },
@@ -112,6 +120,41 @@ bot.command("help", async (ctx) => {
   await ctx.reply(t(lang, "bot.help"));
 });
 
+bot.command("location", async (ctx) => {
+  const tgUser = ctx.from;
+  if (!tgUser) return;
+  const lang = await getUserLang(tgUser.id);
+  if (!isAdminTelegramId(tgUser.id)) {
+    await ctx.reply(t(lang, "bot.location_admin_only"));
+    return;
+  }
+  await ctx.reply(t(lang, "bot.location_prompt"), {
+    reply_markup: locationRequestKeyboard(lang),
+  });
+});
+
+bot.on("message:location", async (ctx) => {
+  const tgUser = ctx.from;
+  const loc = ctx.message.location;
+  if (!tgUser || !loc) return;
+  const lang = await getUserLang(tgUser.id);
+  if (!isAdminTelegramId(tgUser.id)) {
+    // Silently ignore — only the barber sets the shop location.
+    await ctx.reply(t(lang, "bot.location_admin_only"), {
+      reply_markup: { remove_keyboard: true },
+    });
+    return;
+  }
+  await prisma.settings.update({
+    where: { id: "singleton" },
+    data: { locationLat: loc.latitude, locationLng: loc.longitude },
+  });
+  await ctx.reply(
+    t(lang, "bot.location_saved", { lat: loc.latitude.toFixed(6), lng: loc.longitude.toFixed(6) }),
+    { parse_mode: "Markdown", reply_markup: { remove_keyboard: true } },
+  );
+});
+
 bot.command("language", async (ctx) => {
   const lang = ctx.from ? await getUserLang(ctx.from.id) : DEFAULT_LANG;
   await ctx.reply(t(lang, "bot.language_prompt"), {
@@ -179,17 +222,23 @@ async function registerCommands() {
   await bot.api.setMyCommands([
     { command: "start", description: "Open the booking menu" },
     { command: "language", description: "Change language" },
+    { command: "location", description: "Set shop location (barber only)" },
     { command: "help", description: "Help" },
   ]);
-  const descUz = { start: "Yozilishni boshlash", language: "Tilni o'zgartirish", help: "Yordam" };
-  const descRu = { start: "Открыть меню записи", language: "Изменить язык", help: "Помощь" };
+  const descUz = { start: "Yozilishni boshlash", language: "Tilni o'zgartirish", location: "Sartaroshxona joylashuvi", help: "Yordam" };
+  const descRu = { start: "Открыть меню записи", language: "Изменить язык", location: "Адрес парикмахерской", help: "Помощь" };
   for (const s of sets) {
-    const d = s.lang === "UZ" ? descUz : s.lang === "RU" ? descRu : { start: "Open the booking menu", language: "Change language", help: "Help" };
+    const d = s.lang === "UZ"
+      ? descUz
+      : s.lang === "RU"
+      ? descRu
+      : { start: "Open the booking menu", language: "Change language", location: "Set shop location", help: "Help" };
     try {
       await bot.api.setMyCommands(
         [
           { command: "start", description: d.start },
           { command: "language", description: d.language },
+          { command: "location", description: d.location },
           { command: "help", description: d.help },
         ],
         { language_code: s.code },

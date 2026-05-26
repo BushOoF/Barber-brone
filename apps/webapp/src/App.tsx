@@ -13,6 +13,7 @@ import { ClientsPage } from "./pages/settings/Clients";
 import { FinancesPage } from "./pages/settings/Finances";
 import { ShopInfoPage } from "./pages/settings/ShopInfo";
 import { AnnouncementsPage } from "./pages/settings/Announcements";
+import { VacationDaysPage } from "./pages/settings/VacationDays";
 import { LangProvider } from "./state/Lang";
 import { DEFAULT_LANG, translate, type Lang } from "./lib/i18n";
 
@@ -50,6 +51,10 @@ export function App() {
         <Route
           path="/settings/shop-info"
           element={isAdmin ? <ShopInfoPage me={data} /> : <Navigate to="/dashboard" replace />}
+        />
+        <Route
+          path="/settings/vacations"
+          element={isAdmin ? <VacationDaysPage /> : <Navigate to="/dashboard" replace />}
         />
         <Route
           path="/settings/apprentices"

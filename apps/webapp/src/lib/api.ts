@@ -122,6 +122,20 @@ export const api = {
   adminDeleteService: (id: string) =>
     request<{ deletedId: string }>(`/api/admin/services/${id}`, { method: "DELETE" }),
 
+  // ---- Vacation days ----
+  vacations: (from?: string, to?: string) => {
+    const qs = [from && `from=${from}`, to && `to=${to}`].filter(Boolean).join("&");
+    return request<{ dates: string[] }>(`/api/vacations${qs ? `?${qs}` : ""}`);
+  },
+  adminListVacations: () => request<{ vacations: VacationDay[] }>("/api/admin/vacations"),
+  adminAddVacation: (date: string, note?: string | null) =>
+    request<{ vacation: VacationDay }>("/api/admin/vacations", {
+      method: "POST",
+      body: JSON.stringify({ date, note: note ?? null }),
+    }),
+  adminRemoveVacationByDate: (date: string) =>
+    request<{ deletedDate: string }>(`/api/admin/vacations/by-date/${date}`, { method: "DELETE" }),
+
   // ---- Announcements ----
   adminListAnnouncements: () =>
     request<{ announcements: Announcement[] }>("/api/admin/announcements"),
@@ -177,8 +191,17 @@ export interface MeResponse {
     openHourMin: number;
     closeHourMin: number;
     location: string | null;
+    locationLat: number | null;
+    locationLng: number | null;
     hasApprenticeFeature: boolean;
   };
+}
+
+export interface VacationDay {
+  id: string;
+  date: string; // YYYY-MM-DD
+  note: string | null;
+  createdAt: string;
 }
 
 export interface Barber {

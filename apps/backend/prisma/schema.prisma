@@ -163,6 +163,24 @@ model Settings {
   openHourMin          Int      @default(540)
   closeHourMin         Int      @default(1260)
   location             String?  // Address shown to customers on booking confirmation.
+  /// GPS coordinates of the shop, captured via the bot's /location command.
+  /// When present, maps links use coords (precise) instead of geocoding the
+  /// text address (best-effort). Both can be set independently.
+  locationLat          Float?
+  locationLng          Float?
   hasApprenticeFeature Boolean  @default(true)  // Toggled remotely by the barber-dev operator bot.
   updatedAt            DateTime @updatedAt
+}
+
+/// Shop-wide closure days. When today's date-key matches a row here, every
+/// availability query returns empty and new bookings are rejected. Existing
+/// bookings are not auto-cancelled — the barber sorts those manually.
+model VacationDay {
+  id        String   @id @default(cuid())
+  /// "YYYY-MM-DD" in the shop's timezone (Settings.timezone, default Asia/Tashkent).
+  date      String   @unique
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([date])
 }

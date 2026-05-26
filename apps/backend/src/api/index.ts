@@ -10,6 +10,7 @@ import { availabilityRoutes } from "./routes/availability.js";
 import { bookingRoutes } from "./routes/bookings.js";
 import { blockRoutes } from "./routes/blocks.js";
 import { adminRoutes } from "./routes/admin.js";
+import { vacationRoutes } from "./routes/vacations.js";
 
 export async function buildServer() {
   const app = Fastify({
@@ -52,6 +53,7 @@ export async function buildServer() {
   await app.register(bookingRoutes);
   await app.register(blockRoutes);
   await app.register(adminRoutes);
+  await app.register(vacationRoutes);
 
   // Telegram webhook endpoint (used in production)
   if (env.TELEGRAM_WEBHOOK_URL) {

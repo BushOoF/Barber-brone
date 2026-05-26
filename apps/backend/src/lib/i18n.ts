@@ -23,6 +23,12 @@ const STRINGS = {
       "Yozilish ilovasini ochish uchun menyu tugmasini bosing.\n\nBuyruqlar:\n/start — qayta boshlash\n/language — tilni o'zgartirish\n/help — yordam",
     "bot.language_prompt": "Tilni tanlang:",
     "bot.language_set": "Til o'rnatildi ✅",
+    "bot.share_location_btn": "📍 Sartaroshxona joylashuvini yuborish",
+    "bot.location_prompt":
+      "Sartaroshxonangizning joylashuvini yuboring — mijozlar yozuv tasdiqlash xabarida xaritada ko'rishi mumkin.\n\nPastdagi tugmani bosing 👇",
+    "bot.location_admin_only": "Faqat sartarosh sartaroshxona joylashuvini belgilashi mumkin.",
+    "bot.location_saved":
+      "✅ Joylashuv saqlandi.\n\nKoordinatalar: `{lat}, {lng}`\nMijozlar yozuv tasdiqlash xabarida xaritadan ko'rishi mumkin.",
 
     "notify.reminder_will": "Vaqtingizdan 15 daqiqa oldin eslatamiz.",
     "notify.reminders_off": "Bu yozuv uchun eslatma o'chirilgan.",
@@ -57,6 +63,12 @@ const STRINGS = {
       "Нажмите кнопку меню, чтобы открыть приложение.\n\nКоманды:\n/start — начать\n/language — изменить язык\n/help — справка",
     "bot.language_prompt": "Выберите язык:",
     "bot.language_set": "Язык установлен ✅",
+    "bot.share_location_btn": "📍 Отправить адрес парикмахерской",
+    "bot.location_prompt":
+      "Отправьте координаты парикмахерской — клиенты увидят их на карте в сообщении-подтверждении записи.\n\nНажмите кнопку ниже 👇",
+    "bot.location_admin_only": "Только мастер может задать адрес парикмахерской.",
+    "bot.location_saved":
+      "✅ Адрес сохранён.\n\nКоординаты: `{lat}, {lng}`\nКлиенты увидят их на карте в подтверждении записи.",
 
     "notify.reminder_will": "Напомним за 15 минут до записи.",
     "notify.reminders_off": "Напоминания для этой записи отключены.",
@@ -91,6 +103,12 @@ const STRINGS = {
       "Tap the menu button to open the booking app.\n\nCommands:\n/start — register / re-open menu\n/language — change language\n/help — this message",
     "bot.language_prompt": "Choose your language:",
     "bot.language_set": "Language set ✅",
+    "bot.share_location_btn": "📍 Send shop location",
+    "bot.location_prompt":
+      "Send your shop's location — customers will see it on a map in the booking confirmation message.\n\nTap the button below 👇",
+    "bot.location_admin_only": "Only the barber can set the shop location.",
+    "bot.location_saved":
+      "✅ Location saved.\n\nCoords: `{lat}, {lng}`\nCustomers will see them on a map in the booking confirmation.",
 
     "notify.reminder_will": "We'll remind you 15 minutes before your slot.",
     "notify.reminders_off": "Reminders are off for this booking.",

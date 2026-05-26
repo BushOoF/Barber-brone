@@ -20,6 +20,13 @@ export function Settings({ me }: { me: MeResponse }) {
           trailing={<Chevron />}
           onClick={() => nav("/settings/shop-info")}
         />
+        <ListItem
+          leading={<IconBadge emoji="🌴" />}
+          title={t("set.vacations")}
+          subtitle={t("set.vacations_sub")}
+          trailing={<Chevron />}
+          onClick={() => nav("/settings/vacations")}
+        />
         {me.shop.hasApprenticeFeature ? (
           <ListItem
             leading={<IconBadge emoji="👥" />}
