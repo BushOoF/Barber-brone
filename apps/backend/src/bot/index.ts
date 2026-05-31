@@ -2,8 +2,14 @@ import { Bot, GrammyError, HttpError } from "grammy";
 import { env, isAdminTelegramId, mainBarberTelegramId } from "../lib/env.js";
 import { prisma } from "../lib/prisma.js";
 import { DEFAULT_LANG, languageButtons, t, type Lang } from "../lib/i18n.js";
+import { registerVoiceHandlers } from "./voice.js";
 
 export const bot = new Bot(env.TELEGRAM_BOT_TOKEN);
+
+// Voice scheduling — registered only when VOICE_ENABLED (deploy-time switch).
+// Even when on, each shop can be toggled at runtime via the operator bot
+// (/voice) which flips Settings.hasVoiceFeature (checked inside the handler).
+if (env.VOICE_ENABLED) registerVoiceHandlers(bot);
 
 function webAppButtonMarkup(label: string) {
   return {

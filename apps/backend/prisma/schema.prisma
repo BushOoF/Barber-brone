@@ -169,6 +169,8 @@ model Settings {
   locationLat          Float?
   locationLng          Float?
   hasApprenticeFeature Boolean  @default(true)  // Toggled remotely by the barber-dev operator bot.
+  /// Voice AI assistant per-shop toggle, flipped by the operator bot's /voice command.
+  hasVoiceFeature      Boolean  @default(true)
   updatedAt            DateTime @updatedAt
 }
 

@@ -1,0 +1,11 @@
+# Local AI Worker — pinned runtime dependencies (Python 3.11).
+# Self-contained: this worker shares no code with any sibling project.
+
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+faster-whisper==1.1.1
+httpx==0.28.1
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-dotenv==1.0.1
+python-multipart==0.0.20

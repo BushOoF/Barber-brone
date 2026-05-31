@@ -28,6 +28,18 @@ const schema = z.object({
     .string()
     .default("")
     .transform((s) => s.split(",").map((x) => x.trim()).filter(Boolean)),
+
+  // Python voice AI sidecar (faster-whisper + Ollama/Gemma). Local by default.
+  AI_SERVICE_URL: z.string().url().default("http://localhost:8000"),
+  // CPU inference of Gemma can take ~60s, so the timeout is generous.
+  AI_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().default(180_000),
+
+  // Deploy-time switch for the whole voice assistant. Set "false" to run the bot
+  // WITHOUT the AI sidecar (no Python/Ollama needed) — the original, text-only bot.
+  VOICE_ENABLED: z
+    .string()
+    .default("true")
+    .transform((s) => s.trim().toLowerCase() !== "false"),
 });
 
 const parsed = schema.safeParse(process.env);

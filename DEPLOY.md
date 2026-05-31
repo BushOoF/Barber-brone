@@ -6,6 +6,37 @@ Production runbook for putting Barber-brone on a VPS. Targets AWS Lightsail beca
 
 ---
 
+## 0. Which version are you deploying?
+
+This repo deploys in **two modes**, and there are also **four standalone reference projects**. Pick one before you start.
+
+### A. Main app WITHOUT the AI assistant (original — lightest)
+The classic Mini App + bot: customers book in the web app, the barber runs the day from the dashboard. No Python, no Ollama, no GPU — the whole guide below applies as-is and the **$12 / 2 GB** tier is plenty.
+- In `apps/backend/.env`, set `VOICE_ENABLED=false`.
+- **Skip section 4A.** That's it.
+
+### B. Main app WITH the AI voice assistant (what we ship now)
+Everything in A, plus voice-note control (book, cancel, breaks, walk-ins, announcements, prices, hours, days off). Adds two runtime dependencies: a small **Python FastAPI** service and **Ollama running `gemma4:e4b`** (~9.6 GB model).
+- In `apps/backend/.env`, set `VOICE_ENABLED=true` and `AI_SERVICE_URL=http://localhost:8000`.
+- Follow **section 4A** to run the AI sidecar.
+- ⚠️ **Resource reality:** `gemma4:e4b` needs ~10–12 GB RAM for the model and is slow on CPU (~60–90 s/voice note). For production voice use a **GPU** box, **≥16 GB RAM**, or host the AI on a **separate machine** and point `AI_SERVICE_URL` at it over a tunnel (the hybrid project below). The 2 GB tier in §3 is for **mode A only**.
+
+**Per-shop runtime switch:** even with `VOICE_ENABLED=true`, the operator bot toggles voice per shop with `/voice <slug> on|off` (flips `Settings.hasVoiceFeature`; no redeploy).
+
+### Deploying just ONE of the four reference projects
+The repo also has four self-contained, **zero-shared-code** packagings of the voice bot (see [VOICE-SCHEDULING.md](VOICE-SCHEDULING.md)). To deploy one, copy **only that folder** and follow its own README:
+
+| Folder | What it is | Needs |
+|---|---|---|
+| `project-3-standard-crud/` | bot only, **no AI** (text + inline keyboards) | Node + Postgres (2 GB) |
+| `project-1-monolithic-cloud-ai/` | bot + Whisper→Gemma sidecar on one box | Node + Postgres + Python + Ollama (GPU/≥16 GB) |
+| `project-4-direct-gemma-audio/` | bot + **direct audio→Gemma** sidecar (best Uzbek) | Node + Postgres + Python + Ollama (GPU/≥16 GB) |
+| `project-2-hybrid-distributed-ai/` | lean cloud bot (2 GB) + AI worker on your own machine via tunnel | cheap VPS **+** a GPU box |
+
+> For most people the answer is **the main app (this guide)**, mode A or B. The four projects are reference architectures.
+
+---
+
 ## 1. Architecture (with Cloudflare Tunnel)
 
 ```
@@ -325,6 +356,40 @@ sudo systemctl reload nginx
 curl -s http://localhost/                           # should return the Mini App HTML
 curl -s http://localhost/api/healthz                # → {"ok":true,...}
 ```
+
+---
+
+## 4A. (Optional) The AI voice assistant sidecar — mode B only
+
+Skip this entirely if you deployed in **mode A** (`VOICE_ENABLED=false`).
+
+The voice assistant needs (1) **Ollama** serving `gemma4:e4b` and (2) a small **Python FastAPI** service the backend calls at `AI_SERVICE_URL`.
+
+```bash
+# 1) Ollama + the model (one-time; ~9.6 GB download). Run on a GPU host for real speed.
+curl -fsSL https://ollama.com/install.sh | sh
+ollama pull gemma4:e4b
+
+# 2) ffmpeg (audio) + Python 3.11
+sudo apt install -y ffmpeg python3.11 python3.11-venv
+
+# 3) The AI service — use project-4's (direct audio → Gemma, best Uzbek accuracy):
+cd /srv/Barber-brone/project-4-direct-gemma-audio/ai-service
+python3.11 -m venv .venv && . .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env          # set OLLAMA_MODEL=gemma4:e4b, PORT=8000
+
+# 4) Run it under PM2 and verify:
+pm2 start ".venv/bin/python -m app.main" --name barber-ai --cwd "$(pwd)"
+pm2 save
+curl -s http://localhost:8000/healthz   # → {"status":"ok","mode":"direct-audio",...}
+```
+
+Then in `apps/backend/.env` set `VOICE_ENABLED=true` and `AI_SERVICE_URL=http://localhost:8000`, and `pm2 restart barber-backend`.
+
+**Separate AI host (recommended for production):** run Ollama + the Python service on a GPU box, expose it via a tunnel, and set `AI_SERVICE_URL` on the cloud bot to that URL. That is exactly the `project-2-hybrid-distributed-ai` shape — its `cloud-bot` sends a shared-secret header (`WORKER_SHARED_SECRET`) the worker validates.
+
+> CPU-only works for testing but expect ~60–90 s per voice note. Turn voice off any time without redeploying: operator bot → `/voice <slug> off`.
 
 ---
 

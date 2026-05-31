@@ -1,0 +1,84 @@
+// Prisma schema for the cloud-bot (Project 2 — hybrid, cloud side).
+// Times are stored in UTC and displayed in SHOP_TZ (default Asia/Tashkent).
+// This unit DOES create VOICE-sourced appointments (the AI worker is remote).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  DONE
+  CANCELLED
+  NO_SHOW
+}
+
+enum BlockType {
+  BREAK
+  WALK_IN
+  OTHER
+}
+
+enum AppointmentSource {
+  VOICE
+  MANUAL
+}
+
+model Barber {
+  id           String        @id @default(cuid())
+  telegramId   BigInt        @unique
+  name         String
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  appointments Appointment[]
+  blocks       Block[]
+}
+
+model Client {
+  // telegramId is nullable so a barber can add a phone-only client by voice.
+  id           String        @id @default(cuid())
+  name         String?
+  phone        String?
+  telegramId   BigInt?       @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  appointments Appointment[]
+}
+
+model Appointment {
+  id             String            @id @default(cuid())
+  barberId       String
+  barber         Barber            @relation(fields: [barberId], references: [id])
+  clientId       String?
+  client         Client?           @relation(fields: [clientId], references: [id])
+  startAt        DateTime
+  endAt          DateTime
+  status         AppointmentStatus @default(SCHEDULED)
+  isWalkIn       Boolean           @default(false)
+  note           String?
+  source         AppointmentSource @default(MANUAL)
+  reminderSentAt DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([barberId, startAt])
+}
+
+model Block {
+  id        String    @id @default(cuid())
+  barberId  String
+  barber    Barber    @relation(fields: [barberId], references: [id])
+  startAt   DateTime
+  endAt     DateTime
+  type      BlockType @default(BREAK)
+  note      String?
+  createdAt DateTime  @default(now())
+
+  @@index([barberId, startAt])
+}

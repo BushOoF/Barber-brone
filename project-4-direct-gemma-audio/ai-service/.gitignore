@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.Python
+
+# Tooling caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Secrets / env (never commit real values)
+.env
+.env.*
+!.env.example
+
+# Audio scratch + temp work
+*.wav
+*.ogg
+*.oga
+*.mp3
+*.m4a
+/tmp/
+tmp/
+
+# faster-whisper / Hugging Face model caches
+.cache/
+models/
+*.bin
+*.pt
+*.ct2
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,110 @@
+# Project 1 — MONOLITHIC, single-box deployment.
+#
+# Everything runs together: Postgres, the Node bot, and the Python AI sidecar
+# (Whisper STT + an Ollama/Gemma call). The bot talks to the sidecar over the
+# internal compose network at http://ai:8000, so there is no auth between them.
+#
+# Bring up:   docker compose up -d --build      (or ./setup.sh)
+# Logs:       docker compose logs -f bot ai
+#
+# RESOURCES — heads up: running Postgres + Node + Whisper + Gemma on one box is
+# tight on 8 GB RAM. Defaults below use WHISPER_MODEL=small (good accuracy/size
+# trade-off). If the box thrashes or OOMs, either:
+#   - drop to WHISPER_MODEL=base or tiny, and/or
+#   - point OLLAMA_URL at a HOSTED Ollama instead of the bundled "ollama"
+#     service (comment that service out), and/or
+#   - move to a bigger box (>= 16 GB RAM recommended for small + Gemma).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-barber}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-barber}
+      POSTGRES_DB: ${POSTGRES_DB:-barber}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-barber} -d ${POSTGRES_DB:-barber}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Not published to the host by default; the bot reaches it over the compose network.
+    expose:
+      - "5432"
+
+  # Python AI sidecar (faster-whisper STT + Ollama/Gemma tool call).
+  # NOTE: the ai-service/ folder is owned by a separate unit; this compose file
+  # only builds and wires it. It must expose POST /process-voice and GET /healthz.
+  ai:
+    build:
+      context: ./ai-service
+    restart: unless-stopped
+    environment:
+      WHISPER_MODEL: ${WHISPER_MODEL:-small}     # see resources note above (8 GB is tight)
+      WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
+      WHISPER_COMPUTE: ${WHISPER_COMPUTE:-int8}
+      WHISPER_LANGUAGE: ${WHISPER_LANGUAGE:-}     # blank = auto-detect
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-gemma4:e4b}
+      PORT: "8000"
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/healthz', timeout=3).status==200 else 1)\""]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    depends_on:
+      ollama:
+        condition: service_started
+    # faster-whisper caches model weights here so they survive restarts.
+    volumes:
+      - whispercache:/root/.cache/huggingface
+
+  # The Node bot + Postgres manager. Long-polling, so no inbound ports needed.
+  bot:
+    build:
+      context: ./bot
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:?set TELEGRAM_BOT_TOKEN in your .env}
+      ADMIN_TELEGRAM_IDS: ${ADMIN_TELEGRAM_IDS:?set ADMIN_TELEGRAM_IDS in your .env}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-barber}:${POSTGRES_PASSWORD:-barber}@postgres:5432/${POSTGRES_DB:-barber}?schema=public
+      SHOP_TZ: ${SHOP_TZ:-Asia/Tashkent}
+      REMINDER_LEAD_MIN: ${REMINDER_LEAD_MIN:-10}
+      AI_SERVICE_URL: http://ai:8000
+      AI_REQUEST_TIMEOUT_MS: ${AI_REQUEST_TIMEOUT_MS:-45000}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai:
+        condition: service_started
+
+  # OPTIONAL bundled Ollama. Comment this whole service out to use a HOSTED
+  # Ollama instead (and set OLLAMA_URL on the "ai" service accordingly).
+  # After it is up, pull the model once:
+  #     docker compose exec ollama ollama pull gemma4:e4b
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    expose:
+      - "11434"
+    volumes:
+      - ollama:/root/.ollama
+    # GPU acceleration (optional, requires the NVIDIA container toolkit):
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+volumes:
+  pgdata:
+  whispercache:
+  ollama:

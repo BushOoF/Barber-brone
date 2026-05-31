@@ -368,4 +368,48 @@ CORS_EXTRA_ORIGINS=http://localhost:5173
 
 ---
 
+## 11. Voice Scheduling (2026-05) & Deployment Strategies
+
+A barber-facing **voice-note scheduling** capability: the barber sends a Telegram voice note in Uzbek/Russian; it is transcribed, parsed into a structured scheduling action, shown as a **Confirm/Cancel** card, and committed only on confirmation. The barber is also DMed shortly before each upcoming client.
+
+**Pipeline:** voice `.ogg` → ffmpeg (16 kHz mono float32 WAV) → **faster-whisper** (STT) → **Ollama / Gemma 4 `gemma4:e4b`** (strict JSON tool call, temperature 0, schema-constrained, one corrective retry) → Node confirm card → on confirm, Node scheduling logic writes Postgres.
+
+**Two locked decisions (from this session's research):**
+- **Python is a stateless AI worker** — it never touches the DB. The Node bot owns Postgres + scheduling rules + the commit (avoids Prisma `cuid()`/`updatedAt` pitfalls; keeps business logic in one place).
+- **Confirm-before-commit** on every voice action (Uzbek↔Russian ASR + a 4B model can mis-hear; nothing is written until ✅).
+
+**Voice tools:** `add_client` (barber dictates a phone → `Client`, phone-only allowed) · `create_break` ("busy 13:00–14:00", not a client → `Block` BREAK) · `add_walkin` ("client now / at 15:00" → walk-in `Appointment`).
+
+**Three independent, zero-shared-code deployment strategies** live at the repo root (each copy-paste deployable on its own):
+
+| Project | Topology | Input | Notes |
+|---|---|---|---|
+| `project-1-monolithic-cloud-ai/` | one box: Postgres + Node bot + Python AI sidecar + Ollama | voice | localhost AI; 8 GB tight (16 GB comfortable) |
+| `project-2-hybrid-distributed-ai/` | cloud bot (2 GB VPS) + local AI worker (Pi 5/PC) over a secure tunnel | voice | `X-Worker-Secret` auth; audio stays on your hardware |
+| `project-3-standard-crud/` | one box: Postgres + Node bot | text commands + inline-keyboard wizards | **no AI / no Python** |
+
+Full decision guide and run steps: **[VOICE-SCHEDULING.md](VOICE-SCHEDULING.md)**. These are standalone reference projects, **separate** from the main Mini App platform below.
+
+**Caveats:** Ollama exposes no audio input (undocumented workaround has an open crash bug), so audio is handled by Whisper and Ollama only does the text→tool-call step. Uzbek/Russian code-switching is the main accuracy risk — the Confirm step is the safety net; validate on real barber audio before unattended use.
+
+**Integrated into the main app (2026-05-31).** Voice now also runs inside the main bot (`apps/backend`), reusing the existing booking/break/smart-shift/notify services — so a voice action behaves exactly like the webapp/dashboard. It is **role-aware**: ADMIN/APPRENTICE → `create_break` + `add_walkin` on their own day; everyone else → `book_appointment` (next free slot or a stated time, with the MAIN barber + default haircut). Every action shows a **Confirm** card in the user's language (UZ/RU/EN). Files: `bot/voice.ts`, `ai/voice-client.ts`, `services/voice-actions.ts`, `voice.*` i18n keys, and `AI_SERVICE_URL` / `AI_REQUEST_TIMEOUT_MS` (default 180 s — CPU Gemma inference is ~60 s/note) in `lib/env.ts`. The Python AI sidecar is the same service as Project 1, extended with a `?role=` query param (`customer|staff|barber`, default `barber` keeps Project 1 unchanged) and the `book_appointment` tool.
+
+**Project 4 — direct voice→Gemma, no Whisper (`project-4-direct-gemma-audio/`).** Whisper `small` badly mis-transcribed real Uzbek (it detected Kazakh/Korean/Turkish and returned gibberish). This variant skips STT entirely: the WAV is base64-encoded into Ollama's `images[]` field on `/api/chat`, and `gemma4:e4b` returns the tool call **and** a transcript in one request. Verified on Ollama 0.24.0: audio input *and* `format`-constrained tool-calling work together. The **live main-app AI service now runs this direct-Gemma variant** on `:8000`, so the bot understands Uzbek far better. Trade-off: this audio path is officially undocumented (intermittent crash risk per ollama#15333) — fallback is Whisper `large-v3` with a forced `uz`/`ru` language.
+
+**Full voice command set (2026-05-31).** Customers: `book_appointment`, `cancel_booking`. Barbers/apprentices: `create_break` (any day — dates accept today/tomorrow/weekday/YYYY-MM-DD via a `today` anchor passed to the model), `cancel_break`, `add_walkin`, `cancel_booking`, `make_announcement` (broadcast to all customers), `update_service` (price/duration), `update_hours`, `add_vacation` (day off). Every action shows a Confirm card; cancellations reuse smart-shift-earlier + notify the affected customer.
+
+**On/off control.** Deploy-time: `VOICE_ENABLED` env on the backend — set `false` to run the original bot with no Python/Ollama dependency (the voice handler isn't even registered). Runtime, per shop: the operator bot's `/voice <slug> on|off` flips `Settings.hasVoiceFeature` (checked inside the handler), so a shop's voice assistant can be toggled with no redeploy — mirroring the existing `/apprentice` toggle.
+
+## 12. Platform features shipped beyond this MVP spec
+
+Sections 1–10 describe the original MVP core (still accurate for the customer/barber Mini App). The shipped product has since grown well beyond it — **treat the codebase as the source of truth**; key additions:
+
+- **Operator / fleet bot** (`apps/barber-dev`) — multi-tenant SaaS control: shop registry, monthly fees + billing crons, remote feature flags, cross-DB revenue. One per VPS.
+- **Full i18n** — UZ / RU / EN (UZ default), switched via the bot `/language` command.
+- **Vacation days** (shop-wide closures, availability-aware), **Announcements** (text + photo broadcasts with `file_id` reuse), **custom haircut styles** + service categories (HAIRCUT_ADULT/CHILD/ADDON + isDefault), **My Bookings** (customer self-service: list / cancel / reschedule), **shop location + GPS** (`/location` → pin-accurate Maps links), **apprentice feature gate** (toggled by the operator bot), **Finances** dashboard.
+- **Smart Shift Earlier** now stops at the first gap > 30 min so distant bookings stay put; customer-cancel also triggers it.
+- **Deployment:** AWS Lightsail + PM2 + nginx + Cloudflare Tunnel; see `DEPLOY.md` and `scripts/`.
+
+---
+
 *This document is the canonical spec. Any change in behaviour should land here first, then in the codebase.*

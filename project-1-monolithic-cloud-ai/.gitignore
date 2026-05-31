@@ -1,0 +1,28 @@
+# Project-1 root ignores. Each subfolder (bot/, ai-service/) also has its own.
+
+# Secrets / local env (compose reads root .env for tokens)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# OS / editor cruft
+.DS_Store
+.idea/
+.vscode/
+
+# Node (defensive — bot/ has its own too)
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Python sidecar caches (defensive — ai-service/ has its own too)
+__pycache__/
+.venv/
+*.wav
+/tmp/
+
+# Local Docker volume dumps, if any
+*.pgdump

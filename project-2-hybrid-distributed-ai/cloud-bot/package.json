@@ -1,0 +1,36 @@
+{
+  "name": "barber-cloud-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Lean Telegram scheduling bot for a single barbershop. Posts voice notes to a remote AI worker over a secure tunnel. Project 2 (hybrid) — cloud side.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "node --import tsx --watch src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prisma:generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "seed": "node --import tsx src/seed.ts"
+  },
+  "prisma": {
+    "seed": "node --import tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "grammy": "^1.30.0",
+    "node-cron": "^3.0.3",
+    "prisma": "^5.22.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/node-cron": "^3.0.11",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
+  }
+}
