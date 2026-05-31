@@ -11,7 +11,9 @@ const querySchema = z.object({
   // Selection used to derive durationMin when not provided
   adults: z.coerce.number().int().min(0).optional(),
   children: z.coerce.number().int().min(0).optional(),
-  services: z.string().optional(), // comma-separated keys
+  services: z.string().optional(), // comma-separated addon keys
+  adultStyleKey: z.string().optional(),
+  childStyleKey: z.string().optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 
@@ -21,7 +23,13 @@ async function deriveDuration(q: z.infer<typeof querySchema>): Promise<number> {
   const children = q.children ?? 0;
   const services = (q.services?.split(",").map((s) => s.trim()).filter(Boolean)) ?? [];
   const all = await prisma.service.findMany({ where: { isActive: true } });
-  return quote(all, { adults, children, serviceKeys: services }).durationMin;
+  return quote(all, {
+    adults,
+    children,
+    serviceKeys: services,
+    selectedAdultStyleKey: q.adultStyleKey ?? null,
+    selectedChildStyleKey: q.childStyleKey ?? null,
+  }).durationMin;
 }
 
 export async function availabilityRoutes(app: FastifyInstance) {

@@ -113,10 +113,15 @@ export function Confirmation({ me }: { me: MeResponse }) {
             strong
             highlight
           />
-          {me.shop.location ? (
+          {me.shop.location || (me.shop.locationLat != null && me.shop.locationLng != null) ? (
             <>
               <Divider />
-              <LocationRow label={t("confirm.location")} value={me.shop.location} />
+              <LocationRow
+                label={t("confirm.location")}
+                value={me.shop.location ?? `${me.shop.locationLat?.toFixed(5)}, ${me.shop.locationLng?.toFixed(5)}`}
+                lat={me.shop.locationLat}
+                lng={me.shop.locationLng}
+              />
             </>
           ) : null}
         </div>
@@ -164,9 +169,22 @@ function Divider() {
   return <div className="my-0.5 h-px bg-line-soft" />;
 }
 
-function LocationRow({ label, value }: { label: string; value: string }) {
-  // Open the address in Google/Apple Maps when tapped.
-  const mapHref = `https://maps.google.com/?q=${encodeURIComponent(value)}`;
+function LocationRow({
+  label,
+  value,
+  lat,
+  lng,
+}: {
+  label: string;
+  value: string;
+  lat?: number | null;
+  lng?: number | null;
+}) {
+  // Prefer GPS coordinates when available — pin-accurate. Fall back to text search.
+  const mapHref =
+    lat != null && lng != null
+      ? `https://maps.google.com/?q=${lat},${lng}`
+      : `https://maps.google.com/?q=${encodeURIComponent(value)}`;
   return (
     <div className="flex items-start justify-between gap-3 py-1.5">
       <span className="shrink-0 text-xs font-bold uppercase tracking-wider text-tg-hint">{label}</span>

@@ -1,6 +1,7 @@
 import type { Booking, TimeBlock } from "@prisma/client";
 import { prisma } from "../lib/prisma.js";
 import { addMinutes, localDateKey, localDateTimeToUtc, localDayBoundsUtc, todayKey } from "../lib/time.js";
+import { isVacationDay } from "./vacations.js";
 
 export interface Slot {
   startAt: Date;
@@ -46,6 +47,8 @@ export async function findNextSlot(barberId: string, durationMin: number, from: 
   // Search across today + next 6 days.
   for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
     const dateKey = offsetDateKey(from, dayOffset);
+    // Shop closed for the day → skip entirely.
+    if (await isVacationDay(dateKey)) continue;
     const { openUtc, closeUtc, occupied } = await getOccupiedDay(barberId, dateKey);
 
     let cursor = dayOffset === 0 ? new Date(Math.max(from.getTime(), openUtc.getTime())) : openUtc;
@@ -70,6 +73,7 @@ export async function findNextSlot(barberId: string, durationMin: number, from: 
 
 /** Return all valid start-times (every 15 minutes) for the given day that can fit `durationMin`. */
 export async function getDaySlots(barberId: string, dateKey: string, durationMin: number, step = 15): Promise<Slot[]> {
+  if (await isVacationDay(dateKey)) return [];
   const { openUtc, closeUtc, occupied } = await getOccupiedDay(barberId, dateKey);
   const slots: Slot[] = [];
   const now = new Date();
@@ -98,10 +102,11 @@ function roundUpTo(d: Date, minutes: number): Date {
   return new Date(Math.ceil(d.getTime() / ms) * ms);
 }
 
-/** Check whether a specific window is bookable (no overlap with bookings/blocks, within hours). */
+/** Check whether a specific window is bookable (no overlap with bookings/blocks, within hours, not a vacation day). */
 export async function isSlotAvailable(barberId: string, startAt: Date, durationMin: number): Promise<boolean> {
   const endAt = addMinutes(startAt, durationMin);
   const dateKey = localDateKey(startAt);
+  if (await isVacationDay(dateKey)) return false;
   const { openUtc, closeUtc, occupied } = await getOccupiedDay(barberId, dateKey);
   if (startAt < openUtc || endAt > closeUtc) return false;
   return !occupied.some((o) => o.startAt < endAt && o.endAt > startAt);

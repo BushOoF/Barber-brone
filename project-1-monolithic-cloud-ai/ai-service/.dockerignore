@@ -1,0 +1,27 @@
+# Keep the build context tiny and free of secrets / local cruft.
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Model + HF caches (downloaded inside the image at runtime)
+.cache/
+*.bin
+*.pt
+
+# Local audio scratch
+*.wav
+*.ogg
+/tmp/
+
+# VCS / editor / docs not needed at runtime
+.git/
+.gitignore
+README.md
+*.md

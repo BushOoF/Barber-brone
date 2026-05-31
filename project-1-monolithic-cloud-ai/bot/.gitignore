@@ -1,0 +1,27 @@
+# Dependencies & build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Audio scratch (voice notes are downloaded transiently)
+*.wav
+*.ogg
+/tmp/
+tmp/
+
+# Prisma generated client (if ever output into the repo) & local dev db
+prisma/generated/
+prisma/migrations/dev.db*
+
+# Python sidecar caches (defensive — this folder is Node-only)
+__pycache__/
+.venv/

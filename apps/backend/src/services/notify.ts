@@ -28,8 +28,16 @@ export async function notifyBookingConfirmed(bookingId: string): Promise<void> {
   const lang = langOf(b.user);
   const settings = await prisma.settings.findUnique({ where: { id: "singleton" } });
   const remNote = b.remindersOn ? t(lang, "notify.reminder_will") : t(lang, "notify.reminders_off");
-  const locationLine = settings?.location
-    ? t(lang, "notify.location_line", { location: settings.location })
+  // Prefer GPS coords for the map link when present; otherwise geocode the text.
+  let locationText: string | null = null;
+  if (settings?.locationLat != null && settings?.locationLng != null) {
+    const mapUrl = `https://maps.google.com/?q=${settings.locationLat},${settings.locationLng}`;
+    locationText = settings.location ? `[${settings.location}](${mapUrl})` : mapUrl;
+  } else if (settings?.location) {
+    locationText = settings.location;
+  }
+  const locationLine = locationText
+    ? t(lang, "notify.location_line", { location: locationText })
     : "";
   const text = t(lang, "notify.confirmed", {
     barber: b.barber.displayName,

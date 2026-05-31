@@ -56,6 +56,8 @@ export const api = {
     adults: number;
     children: number;
     services: string[];
+    selectedAdultStyleKey?: string | null;
+    selectedChildStyleKey?: string | null;
     remindersOn: boolean;
   }) => request<{ booking: Booking; quote: PriceQuote }>("/api/bookings", { method: "POST", body: JSON.stringify(body) }),
   myBookings: () => request<{ bookings: BookingWithBarber[] }>("/api/bookings/mine"),
@@ -64,6 +66,12 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ remindersOn }),
     }),
+  cancelMyBooking: (id: string) =>
+    request<{ booking: Booking; shifted?: number }>(`/api/bookings/${id}`, { method: "DELETE" }),
+  daySlotsForDuration: (params: { barberId: string; date: string; durationMin: number }) =>
+    request<DaySlotsResponse>(
+      `/api/availability/day?barberId=${encodeURIComponent(params.barberId)}&date=${params.date}&durationMin=${params.durationMin}`,
+    ),
 
   dayForBarber: (barberId: string | undefined, date: string) =>
     request<DayBookingsResponse>(
@@ -107,8 +115,46 @@ export const api = {
   adminDeleteApprentice: (id: string) =>
     request<{ deletedId: string }>(`/api/admin/apprentices/${id}`, { method: "DELETE" }),
 
-  adminUpdateService: (id: string, patch: { name?: string; durationMin?: number; priceMinor?: number; isActive?: boolean }) =>
+  adminUpdateService: (id: string, patch: { name?: string; durationMin?: number; priceMinor?: number; isActive?: boolean; isDefault?: boolean }) =>
     request<{ service: ServiceDef }>(`/api/admin/services/${id}`, { method: "PUT", body: JSON.stringify(patch) }),
+  adminCreateService: (body: { name: string; category: ServiceCategory; priceMinor: number; durationMin: number; isDefault?: boolean }) =>
+    request<{ service: ServiceDef }>("/api/admin/services", { method: "POST", body: JSON.stringify(body) }),
+  adminDeleteService: (id: string) =>
+    request<{ deletedId: string }>(`/api/admin/services/${id}`, { method: "DELETE" }),
+
+  // ---- Vacation days ----
+  vacations: (from?: string, to?: string) => {
+    const qs = [from && `from=${from}`, to && `to=${to}`].filter(Boolean).join("&");
+    return request<{ dates: string[] }>(`/api/vacations${qs ? `?${qs}` : ""}`);
+  },
+  adminListVacations: () => request<{ vacations: VacationDay[] }>("/api/admin/vacations"),
+  adminAddVacation: (date: string, note?: string | null) =>
+    request<{ vacation: VacationDay }>("/api/admin/vacations", {
+      method: "POST",
+      body: JSON.stringify({ date, note: note ?? null }),
+    }),
+  adminRemoveVacationByDate: (date: string) =>
+    request<{ deletedDate: string }>(`/api/admin/vacations/by-date/${date}`, { method: "DELETE" }),
+
+  // ---- Announcements ----
+  adminListAnnouncements: () =>
+    request<{ announcements: Announcement[] }>("/api/admin/announcements"),
+  adminSendAnnouncement: (message: string, photo?: File | null) => {
+    if (photo) {
+      const fd = new FormData();
+      fd.append("message", message);
+      fd.append("photo", photo, photo.name);
+      // Don't set Content-Type — fetch sets multipart/form-data with boundary automatically.
+      return request<{ announcement: AnnouncementSendResult }>("/api/admin/announcements", {
+        method: "POST",
+        body: fd,
+      });
+    }
+    return request<{ announcement: AnnouncementSendResult }>("/api/admin/announcements", {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    });
+  },
 
   adminListUsers: (search?: string) =>
     request<{ users: AdminUser[] }>(`/api/admin/users${search ? `?search=${encodeURIComponent(search)}` : ""}`),
@@ -145,8 +191,17 @@ export interface MeResponse {
     openHourMin: number;
     closeHourMin: number;
     location: string | null;
+    locationLat: number | null;
+    locationLng: number | null;
     hasApprenticeFeature: boolean;
   };
+}
+
+export interface VacationDay {
+  id: string;
+  date: string; // YYYY-MM-DD
+  note: string | null;
+  createdAt: string;
 }
 
 export interface Barber {
@@ -173,14 +228,38 @@ export interface AdminUser {
   createdAt: string;
 }
 
+export type ServiceCategory = "HAIRCUT_ADULT" | "HAIRCUT_CHILD" | "ADDON";
+
 export interface ServiceDef {
   id: string;
   key: string;
   name: string;
+  category: ServiceCategory;
+  isDefault: boolean;
   durationMin: number;
   priceMinor: number;
   isActive: boolean;
   sortOrder: number;
+}
+
+export interface Announcement {
+  id: string;
+  message: string;
+  photoFileId: string | null;
+  photoName: string | null;
+  recipients: number;
+  delivered: number;
+  failed: number;
+  createdAt: string;
+}
+
+export interface AnnouncementSendResult {
+  id: string;
+  recipients: number;
+  delivered: number;
+  failed: number;
+  photoFileId: string | null;
+  photoName: string | null;
 }
 
 export interface NextSlotResponse {
@@ -211,6 +290,8 @@ export interface Booking {
   adults: number;
   children: number;
   services: string[];
+  selectedAdultStyleKey: string | null;
+  selectedChildStyleKey: string | null;
   status: "SCHEDULED" | "COMPLETED" | "CANCELLED_BY_USER" | "DISCARDED_NO_SHOW" | "TRANSFERRED";
   remindersOn: boolean;
   user?: { id: string; firstName: string | null; lastName: string | null; username: string | null; phone: string | null };

@@ -38,6 +38,12 @@ enum BlockType {
   MANUAL
 }
 
+enum ServiceCategory {
+  HAIRCUT_ADULT  // a haircut style selectable for adult party members
+  HAIRCUT_CHILD  // a haircut style selectable for child party members
+  ADDON          // optional extras like wash, beard
+}
+
 model User {
   id          String   @id @default(cuid())
   telegramId  BigInt   @unique
@@ -51,8 +57,9 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  bookings      Booking[]
-  barberProfile Barber?
+  bookings        Booking[]
+  barberProfile   Barber?
+  sentAnnouncements Announcement[]
 }
 
 model Barber {
@@ -70,13 +77,18 @@ model Barber {
 }
 
 model Service {
-  id          String  @id @default(cuid())
-  key         String  @unique
+  id          String          @id @default(cuid())
+  key         String          @unique
   name        String
+  category    ServiceCategory @default(ADDON)
+  /// Exactly one Service per HAIRCUT_ADULT and HAIRCUT_CHILD category should
+  /// have isDefault=true. Used as the fallback style when a customer doesn't
+  /// pick one explicitly.
+  isDefault   Boolean         @default(false)
   durationMin Int
   priceMinor  Int
-  isActive    Boolean @default(true)
-  sortOrder   Int     @default(0)
+  isActive    Boolean         @default(true)
+  sortOrder   Int             @default(0)
 }
 
 model Booking {
@@ -92,6 +104,10 @@ model Booking {
   adults         Int           @default(1)
   children       Int           @default(0)
   services       String[]
+  /// Service.key for the chosen adult haircut style; null = use the HAIRCUT_ADULT default.
+  selectedAdultStyleKey String?
+  /// Service.key for the chosen child haircut style; null = use the HAIRCUT_CHILD default.
+  selectedChildStyleKey String?
   status         BookingStatus @default(SCHEDULED)
   remindersOn    Boolean       @default(true)
   reminderSentAt DateTime?
@@ -116,6 +132,28 @@ model TimeBlock {
   @@index([barberId, startAt])
 }
 
+/// Broadcast announcement made by the barber (admin) to every customer that's
+/// shared their contact with the bot. One row per send; per-recipient delivery
+/// status is logged but not stored individually to keep the table small.
+model Announcement {
+  id           String   @id @default(cuid())
+  message      String
+  /// Telegram file_id captured from the first sendPhoto. Reusing it for every
+  /// subsequent recipient avoids re-uploading the bytes to Telegram for each
+  /// customer. Null when the announcement was text-only.
+  photoFileId  String?
+  /// Original filename of the uploaded image — for display in history.
+  photoName    String?
+  sentByUserId String
+  sentBy       User     @relation(fields: [sentByUserId], references: [id])
+  recipients   Int      @default(0)
+  delivered    Int      @default(0)
+  failed       Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 model Settings {
   id                   String   @id @default("singleton")
   shopName             String   @default("Barbershop")
@@ -125,6 +163,26 @@ model Settings {
   openHourMin          Int      @default(540)
   closeHourMin         Int      @default(1260)
   location             String?  // Address shown to customers on booking confirmation.
+  /// GPS coordinates of the shop, captured via the bot's /location command.
+  /// When present, maps links use coords (precise) instead of geocoding the
+  /// text address (best-effort). Both can be set independently.
+  locationLat          Float?
+  locationLng          Float?
   hasApprenticeFeature Boolean  @default(true)  // Toggled remotely by the barber-dev operator bot.
+  /// Voice AI assistant per-shop toggle, flipped by the operator bot's /voice command.
+  hasVoiceFeature      Boolean  @default(true)
   updatedAt            DateTime @updatedAt
+}
+
+/// Shop-wide closure days. When today's date-key matches a row here, every
+/// availability query returns empty and new bookings are rejected. Existing
+/// bookings are not auto-cancelled — the barber sorts those manually.
+model VacationDay {
+  id        String   @id @default(cuid())
+  /// "YYYY-MM-DD" in the shop's timezone (Settings.timezone, default Asia/Tashkent).
+  date      String   @unique
+  note      String?
+  createdAt DateTime @default(now())
+
+  @@index([date])
 }

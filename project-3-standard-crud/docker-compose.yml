@@ -1,0 +1,55 @@
+# Standard-CRUD barbershop bot — Postgres + bot. Sized for a small ~2GB host.
+#
+#   1. cp .env.example .env  &&  edit TELEGRAM_BOT_TOKEN + ADMIN_TELEGRAM_IDS
+#   2. docker compose up -d --build
+#   3. docker compose logs -f bot
+#
+# The bot entrypoint runs `prisma db push` + seed on start, then long-polls.
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: barber
+      POSTGRES_PASSWORD: barber
+      POSTGRES_DB: barber
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U barber -d barber"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    # No host port published by default — only the bot needs it. Uncomment to
+    # connect a local client / Prisma Studio:
+    # ports:
+    #   - "5432:5432"
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      ADMIN_TELEGRAM_IDS: ${ADMIN_TELEGRAM_IDS}
+      SHOP_TZ: ${SHOP_TZ:-Asia/Tashkent}
+      REMINDER_LEAD_MIN: ${REMINDER_LEAD_MIN:-10}
+      # Container talks to the db service over the compose network.
+      DATABASE_URL: postgresql://barber:barber@db:5432/barber?schema=public
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+volumes:
+  pgdata:

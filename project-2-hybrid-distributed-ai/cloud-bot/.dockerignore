@@ -1,0 +1,17 @@
+node_modules
+dist
+npm-debug.log
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+*.md
+*.wav
+*.ogg
+tmp
+/tmp
+.DS_Store
+docker-compose.yml
+Dockerfile
+.dockerignore

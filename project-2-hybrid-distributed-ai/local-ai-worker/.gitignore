@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.python-version
+
+# Secrets / local env (never commit real tokens)
+.env
+.env.local
+.env.*.local
+
+# Audio scratch produced by the pipeline
+*.wav
+*.ogg
+*.mp3
+*.m4a
+/tmp/
+tmp/
+
+# Model caches (faster-whisper / HuggingFace download these on first run)
+models/
+.cache/
+.huggingface/
+
+# Tooling caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store

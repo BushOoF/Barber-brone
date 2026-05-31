@@ -4,6 +4,7 @@ import { api } from "./lib/api";
 import { Landing } from "./pages/Landing";
 import { Configure } from "./pages/Configure";
 import { Confirmation } from "./pages/Confirmation";
+import { MyBookings } from "./pages/MyBookings";
 import { Dashboard } from "./pages/Dashboard";
 import { Settings } from "./pages/Settings";
 import { ApprenticesPage } from "./pages/settings/Apprentices";
@@ -11,6 +12,8 @@ import { ServicesPage } from "./pages/settings/Services";
 import { ClientsPage } from "./pages/settings/Clients";
 import { FinancesPage } from "./pages/settings/Finances";
 import { ShopInfoPage } from "./pages/settings/ShopInfo";
+import { AnnouncementsPage } from "./pages/settings/Announcements";
+import { VacationDaysPage } from "./pages/settings/VacationDays";
 import { LangProvider } from "./state/Lang";
 import { DEFAULT_LANG, translate, type Lang } from "./lib/i18n";
 
@@ -40,6 +43,7 @@ export function App() {
         />
         <Route path="/configure" element={hasPhone ? <Configure me={data} /> : <Navigate to="/" replace />} />
         <Route path="/confirmation/:id" element={<Confirmation me={data} />} />
+        <Route path="/my-bookings" element={hasPhone ? <MyBookings me={data} /> : <Navigate to="/" replace />} />
         <Route path="/dashboard" element={isStaff ? <Dashboard me={data} /> : <Navigate to="/" replace />} />
 
         {/* Admin-only Settings tree */}
@@ -49,12 +53,20 @@ export function App() {
           element={isAdmin ? <ShopInfoPage me={data} /> : <Navigate to="/dashboard" replace />}
         />
         <Route
+          path="/settings/vacations"
+          element={isAdmin ? <VacationDaysPage /> : <Navigate to="/dashboard" replace />}
+        />
+        <Route
           path="/settings/apprentices"
           element={isAdmin && data.shop.hasApprenticeFeature ? <ApprenticesPage me={data} /> : <Navigate to="/settings" replace />}
         />
         <Route
           path="/settings/services"
           element={isAdmin ? <ServicesPage me={data} /> : <Navigate to="/dashboard" replace />}
+        />
+        <Route
+          path="/settings/announcements"
+          element={isAdmin ? <AnnouncementsPage /> : <Navigate to="/dashboard" replace />}
         />
         <Route path="/settings/clients" element={isAdmin ? <ClientsPage /> : <Navigate to="/dashboard" replace />} />
         <Route

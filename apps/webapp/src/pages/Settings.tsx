@@ -20,6 +20,13 @@ export function Settings({ me }: { me: MeResponse }) {
           trailing={<Chevron />}
           onClick={() => nav("/settings/shop-info")}
         />
+        <ListItem
+          leading={<IconBadge emoji="🌴" />}
+          title={t("set.vacations")}
+          subtitle={t("set.vacations_sub")}
+          trailing={<Chevron />}
+          onClick={() => nav("/settings/vacations")}
+        />
         {me.shop.hasApprenticeFeature ? (
           <ListItem
             leading={<IconBadge emoji="👥" />}
@@ -35,6 +42,13 @@ export function Settings({ me }: { me: MeResponse }) {
           subtitle={t("set.services_sub")}
           trailing={<Chevron />}
           onClick={() => nav("/settings/services")}
+        />
+        <ListItem
+          leading={<IconBadge emoji="📢" />}
+          title={t("set.announcements")}
+          subtitle={t("set.announcements_sub")}
+          trailing={<Chevron />}
+          onClick={() => nav("/settings/announcements")}
         />
         <ListItem
           leading={<IconBadge emoji="📒" />}

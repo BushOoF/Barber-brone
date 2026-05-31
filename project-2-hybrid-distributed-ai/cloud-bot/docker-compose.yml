@@ -1,0 +1,60 @@
+# Cloud-bot stack for a small (~2 GB) VPS: Postgres + the Node bot only.
+# The AI worker is NOT here — it runs on a separate machine and is reached over
+# a secure tunnel via AI_SERVICE_URL (see ../README.md).
+#
+# Usage:
+#   cp .env.example .env   # then edit values
+#   docker compose up -d --build
+#   docker compose logs -f bot
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-barber}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-barber}
+      POSTGRES_DB: ${POSTGRES_DB:-barber}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-barber} -d ${POSTGRES_DB:-barber}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Keep Postgres modest so it co-exists with the bot on a 2 GB box.
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    # Not published to the host by default — only the bot needs it (same network).
+    expose:
+      - "5432"
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # Override DATABASE_URL host to the compose service name regardless of what
+      # .env says, so the container always reaches Postgres on the internal net.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-barber}:${POSTGRES_PASSWORD:-barber}@db:5432/${POSTGRES_DB:-barber}?schema=public
+    # Apply migrations + seed admins, then start the bot.
+    # Uses the COMPILED seed (dist/seed.js) so the runtime image needs no tsx.
+    command: >
+      sh -c "npx prisma migrate deploy &&
+             node dist/seed.js &&
+             node dist/index.js"
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+volumes:
+  pgdata:

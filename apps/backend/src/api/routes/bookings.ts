@@ -20,6 +20,8 @@ const createSchema = z.object({
   adults: z.number().int().min(1).max(10).default(1),
   children: z.number().int().min(0).max(10).default(0),
   services: z.array(z.string()).default([]),
+  selectedAdultStyleKey: z.string().nullable().optional(),
+  selectedChildStyleKey: z.string().nullable().optional(),
   remindersOn: z.boolean().default(true),
 });
 
@@ -41,9 +43,16 @@ export async function bookingRoutes(app: FastifyInstance) {
     if (!barber || !barber.isActive) return reply.code(404).send({ error: "barber_not_found" });
 
     const allServices = await prisma.service.findMany({ where: { isActive: true } });
+    const selection = {
+      adults: body.adults,
+      children: body.children,
+      serviceKeys: body.services,
+      selectedAdultStyleKey: body.selectedAdultStyleKey ?? null,
+      selectedChildStyleKey: body.selectedChildStyleKey ?? null,
+    };
     let q;
     try {
-      q = quote(allServices, { adults: body.adults, children: body.children, serviceKeys: body.services });
+      q = quote(allServices, selection);
     } catch (err) {
       return reply.code(400).send({ error: "invalid_services", message: (err as Error).message });
     }
@@ -65,7 +74,9 @@ export async function bookingRoutes(app: FastifyInstance) {
         totalPriceMinor: q.totalPriceMinor,
         adults: body.adults,
         children: body.children,
-        services: normalizeSelection({ adults: body.adults, children: body.children, serviceKeys: body.services }),
+        services: normalizeSelection(selection, allServices),
+        selectedAdultStyleKey: body.selectedAdultStyleKey ?? null,
+        selectedChildStyleKey: body.selectedChildStyleKey ?? null,
         remindersOn: body.remindersOn,
         status: "SCHEDULED",
       },
@@ -203,10 +214,12 @@ export async function bookingRoutes(app: FastifyInstance) {
     },
   );
 
-  // Manual time change by staff (swipe-right → "Shift time").
+  // Manual time change. Two callers:
+  //   - Staff via the dashboard (swipe-right → "Shift time")
+  //   - Customer via "My bookings" → Reschedule
+  // Auth: any authenticated user, but they must either own the booking or be staff.
   app.patch(
     "/api/bookings/:id/time",
-    { preHandler: requireStaff },
     async (req, reply) => {
       const params = z.object({ id: z.string() }).safeParse(req.params);
       const body = z.object({ startAt: z.string().datetime() }).safeParse(req.body);
@@ -216,7 +229,11 @@ export async function bookingRoutes(app: FastifyInstance) {
       const booking = await prisma.booking.findUnique({ where: { id: params.data.id } });
       if (!booking) return reply.code(404).send({ error: "not_found" });
       if (booking.status !== "SCHEDULED") return reply.code(409).send({ error: "not_scheduled" });
-      if (user.role === "APPRENTICE" && booking.barberId !== barber!.id) {
+
+      const isOwner = booking.userId === user.id;
+      const isStaff = user.role === "ADMIN" || user.role === "APPRENTICE";
+      if (!isOwner && !isStaff) return reply.code(403).send({ error: "forbidden" });
+      if (isStaff && !isOwner && user.role === "APPRENTICE" && booking.barberId !== barber!.id) {
         return reply.code(403).send({ error: "not_your_booking" });
       }
 
@@ -261,11 +278,14 @@ export async function bookingRoutes(app: FastifyInstance) {
         data: { startAt: newStart, endAt: newEnd },
       });
 
-      // Notify the customer with the appropriate-direction message.
-      if (newStart.getTime() > oldStart.getTime()) {
-        void notifyShiftedLater(updated.id, oldStart);
-      } else if (newStart.getTime() < oldStart.getTime()) {
-        void notifyShiftedEarlier(updated.id, oldStart);
+      // Notify the customer with the appropriate-direction message — but skip
+      // it when the customer rescheduled themselves (they already know).
+      if (!isOwner) {
+        if (newStart.getTime() > oldStart.getTime()) {
+          void notifyShiftedLater(updated.id, oldStart);
+        } else if (newStart.getTime() < oldStart.getTime()) {
+          void notifyShiftedEarlier(updated.id, oldStart);
+        }
       }
 
       return { booking: serializeBooking(updated) };
