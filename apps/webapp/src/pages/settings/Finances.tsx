@@ -54,14 +54,14 @@ export function FinancesPage({ me }: { me: MeResponse }) {
     <div className="flex h-full flex-col">
       <PageHeader title={t("fin.title")} subtitle={`${from} → ${to}`} />
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-5 pb-6">
+      <div className="flex-1 space-y-5 overflow-y-auto px-5 pb-6">
         <div className="grid grid-cols-2 gap-2">
           <DateField label={t("fin.from")} value={from} onChange={setFrom} />
           <DateField label={t("fin.to")} value={to} onChange={setTo} />
         </div>
 
         <div className="rounded-3xl bg-gradient-to-br from-tg-button to-tg-link p-5 text-tg-buttonText shadow-pop">
-          <div className="text-xs font-semibold uppercase tracking-wider opacity-80">{t("fin.revenue_label")}</div>
+          <div className="eyebrow opacity-80">{t("fin.revenue_label")}</div>
           <div className="mt-1 text-4xl font-extrabold tabular-nums">{formatMoney(revenue, me.shop.currency)}</div>
           <div className="mt-2 text-sm opacity-90">
             {bookingsCount} {bookingsCount === 1 ? t("fin.bookings") : t("fin.bookings_plural")} ·{" "}
@@ -70,7 +70,7 @@ export function FinancesPage({ me }: { me: MeResponse }) {
         </div>
 
         <section>
-          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-tg-hint">{t("fin.by_barber")}</h3>
+          <h3 className="mb-2 eyebrow text-tg-hint">{t("fin.by_barber")}</h3>
           {perBarber.length === 0 ? (
             <div className="rounded-2xl bg-surface-1 p-6 text-center text-sm text-tg-hint ring-1 ring-line-soft">
               {t("fin.no_data")}
@@ -108,7 +108,7 @@ export function FinancesPage({ me }: { me: MeResponse }) {
 function DateField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-tg-hint">{label}</span>
+      <span className="mb-1 block eyebrow text-tg-hint">{label}</span>
       <input
         type="date"
         value={value}

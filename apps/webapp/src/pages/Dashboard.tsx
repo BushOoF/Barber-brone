@@ -68,10 +68,10 @@ export function Dashboard({ me }: { me: MeResponse }) {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="space-y-3 border-b border-line-soft bg-tg-bg px-4 pb-3 pt-4 safe-top">
+      <header className="space-y-3 border-b border-line-soft bg-tg-bg px-5 pb-3 pt-4 safe-top">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <div className="truncate text-[11px] font-bold uppercase tracking-wider text-tg-hint">
+            <div className="truncate eyebrow text-tg-hint">
               {me.shop.name}
             </div>
             <h1 className="truncate text-xl font-extrabold tracking-tight">
@@ -116,7 +116,7 @@ export function Dashboard({ me }: { me: MeResponse }) {
         ) : null}
       </header>
 
-      <main className="flex-1 overflow-y-auto px-3 py-4">
+      <main className="flex-1 overflow-y-auto px-5 py-4">
         {dayQ.status === "loading" ? (
           <div className="space-y-2">
             <div className="h-24 rounded-2xl shimmer" />
@@ -139,7 +139,7 @@ export function Dashboard({ me }: { me: MeResponse }) {
         )}
       </main>
 
-      <footer className="border-t border-line-soft bg-tg-bg px-4 pb-3 pt-3 safe-bottom">
+      <footer className="border-t border-line-soft bg-tg-bg px-5 pb-3 pt-3 safe-bottom">
         <TakeBreakButton
           barberId={isAdmin ? effectiveBarberId ?? undefined : undefined}
           onApplied={() => dayQ.refetch()}

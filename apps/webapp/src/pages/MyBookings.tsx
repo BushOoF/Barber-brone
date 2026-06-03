@@ -119,7 +119,7 @@ export function MyBookings({ me }: { me: MeResponse }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-2">
-      <h2 className="text-[11px] font-bold uppercase tracking-wider text-tg-hint">{title}</h2>
+      <h2 className="eyebrow text-tg-hint">{title}</h2>
       <div className="space-y-2">{children}</div>
     </section>
   );
@@ -155,7 +155,7 @@ function BookingRow({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           {dayLabel ? (
-            <div className="text-[10px] font-bold uppercase tracking-wider text-tg-hint">{dayLabel}</div>
+            <div className="eyebrow text-tg-hint">{dayLabel}</div>
           ) : null}
           <div className="text-2xl font-extrabold tabular-nums leading-tight">
             {formatTime(booking.startAt)}

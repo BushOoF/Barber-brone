@@ -219,7 +219,7 @@ export function TakeBreakButton({ barberId, onApplied }: Props) {
           </div>
         </div>
 
-        <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-tg-hint">{t("tab.duration")}</div>
+        <div className="mb-3 eyebrow text-tg-hint">{t("tab.duration")}</div>
         <div className="mb-2 flex flex-wrap gap-2">
           {PRESETS.map((m) => {
             const active = duration === m;
@@ -256,7 +256,7 @@ export function TakeBreakButton({ barberId, onApplied }: Props) {
 function TimeField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-tg-hint">{label}</span>
+      <span className="mb-1 block eyebrow text-tg-hint">{label}</span>
       <input
         type="time"
         value={value}
@@ -272,24 +272,24 @@ function ImpactPanel({ plan, canTransferAll }: { plan: NonNullable<InsertBlockRe
   const overlapping = plan.overlapping;
   if (overlapping.length === 0 && plan.moves.length === 0) {
     return (
-      <div className="mt-4 rounded-2xl bg-emerald-500/10 px-4 py-3 ring-1 ring-emerald-500/30">
-        <div className="text-sm font-bold text-emerald-700">{t("tab.no_conflicts")}</div>
-        <div className="text-xs text-emerald-700/80">{t("tab.nobody_booked")}</div>
+      <div className="mt-4 rounded-2xl bg-success/10 px-4 py-3 ring-1 ring-success/30">
+        <div className="text-sm font-bold text-success">{t("tab.no_conflicts")}</div>
+        <div className="text-xs text-success/80">{t("tab.nobody_booked")}</div>
       </div>
     );
   }
   return (
     <div className="mt-4 space-y-3">
       {overlapping.length > 0 ? (
-        <div className="rounded-2xl bg-amber-500/10 p-4 ring-1 ring-amber-500/30">
+        <div className="rounded-2xl bg-warning/10 p-4 ring-1 ring-warning/30">
           <div className="flex items-center justify-between">
-            <div className="text-sm font-bold text-amber-700">{t("tab.affected", { n: overlapping.length })}</div>
+            <div className="text-sm font-bold text-warning">{t("tab.affected", { n: overlapping.length })}</div>
             {plan.suggestedTransferTo ? (
               <div
                 className={
-                  "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider " +
+                  "rounded-full px-2 py-0.5 eyebrow " +
                   (canTransferAll
-                    ? "bg-emerald-500/15 text-emerald-700 ring-1 ring-emerald-500/40"
+                    ? "bg-success/15 text-success ring-1 ring-success/40"
                     : "bg-tg-hint/20 text-tg-hint")
                 }
               >
@@ -297,7 +297,7 @@ function ImpactPanel({ plan, canTransferAll }: { plan: NonNullable<InsertBlockRe
               </div>
             ) : null}
           </div>
-          <ul className="mt-2 space-y-1 text-xs text-amber-700">
+          <ul className="mt-2 space-y-1 text-xs text-warning">
             {overlapping.map((c) => (
               <li key={c.bookingId}>
                 · {formatTime(c.startAt)} — {c.customer}
@@ -309,7 +309,7 @@ function ImpactPanel({ plan, canTransferAll }: { plan: NonNullable<InsertBlockRe
 
       {plan.moves.length > 0 ? (
         <div className="rounded-2xl bg-surface-1 p-3 ring-1 ring-line-soft">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-tg-hint">{t("tab.if_shift")}</div>
+          <div className="eyebrow text-tg-hint">{t("tab.if_shift")}</div>
           <ul className="mt-1 space-y-0.5 text-xs text-tg-text">
             {plan.moves.map((m) => (
               <li key={m.bookingId} className="flex justify-between">

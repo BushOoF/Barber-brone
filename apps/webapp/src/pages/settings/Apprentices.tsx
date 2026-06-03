@@ -103,8 +103,8 @@ function ApprenticeRow({
         </div>
         <span
           className={
-            "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider " +
-            (a.isActive ? "bg-emerald-500/15 text-emerald-600" : "bg-tg-hint/15 text-tg-hint")
+            "shrink-0 rounded-full px-2.5 py-1 eyebrow " +
+            (a.isActive ? "bg-success/15 text-success" : "bg-tg-hint/15 text-tg-hint")
           }
         >
           {a.isActive ? t("common.active") : t("common.off")}
@@ -317,7 +317,7 @@ function BlockOutSheet({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-tg-hint">{label}</span>
+      <span className="mb-1 block eyebrow text-tg-hint">{label}</span>
       {children}
     </label>
   );

@@ -72,7 +72,7 @@ export function ClientCard({ booking, currency, canTransfer, onDiscard, onTransf
         <ActionButton
           label={t("card.shift")}
           icon="🕒"
-          className="bg-amber-500 text-white pointer-events-auto"
+          className="bg-warning text-white pointer-events-auto"
           onClick={() => {
             onShiftRequest(booking);
             close();
@@ -156,7 +156,7 @@ export function ClientCard({ booking, currency, canTransfer, onDiscard, onTransf
             {extras.map((k) => (
               <Chip key={k}>{localizedServiceName(lang, k, k)}</Chip>
             ))}
-            <span className="ml-auto flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-tg-hint">
+            <span className="ml-auto flex items-center gap-2 eyebrow text-tg-hint">
               <span>{t("card.swipe_right_hint")}</span>
               <span>·</span>
               <span>{t("dash.swipe_hint")}</span>
@@ -189,7 +189,7 @@ function ActionButton({
       className={"flex h-full flex-col items-center justify-center gap-1 transition active:brightness-90 " + className}
     >
       <span className="text-xl font-bold">{icon}</span>
-      <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
+      <span className="eyebrow">{label}</span>
     </button>
   );
 }

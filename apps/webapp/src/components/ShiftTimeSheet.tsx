@@ -89,12 +89,12 @@ export function ShiftTimeSheet({ booking, onClose, onSaved }: Props) {
 
       <div className="space-y-3">
         <div className="rounded-2xl bg-surface-1 p-3 ring-1 ring-line-soft">
-          <div className="text-[10px] font-bold uppercase tracking-wider text-tg-hint">{t("shift.current")}</div>
+          <div className="eyebrow text-tg-hint">{t("shift.current")}</div>
           <div className="mt-0.5 text-2xl font-extrabold tabular-nums">{currentLabel}</div>
         </div>
 
         <label className="block">
-          <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-tg-hint">
+          <span className="mb-1 block eyebrow text-tg-hint">
             {t("shift.new_time")}
           </span>
           <input

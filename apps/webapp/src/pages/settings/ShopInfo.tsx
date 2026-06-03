@@ -43,7 +43,7 @@ export function ShopInfoPage({ me }: { me: MeResponse }) {
       <div className="flex-1 overflow-y-auto px-5 pb-6">
         <div className="rounded-2xl bg-surface-1 p-4 ring-1 ring-line-soft">
           <label className="block">
-            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-tg-hint">
+            <span className="mb-1 block eyebrow text-tg-hint">
               {t("shop.location_label")}
             </span>
             <textarea
@@ -59,7 +59,7 @@ export function ShopInfoPage({ me }: { me: MeResponse }) {
 
           <div className="mt-3 flex items-center justify-end gap-3">
             {saved ? (
-              <span className="text-xs font-bold text-emerald-600">{t("shop.location_saved")}</span>
+              <span className="text-xs font-bold text-success">{t("shop.location_saved")}</span>
             ) : null}
             <Button size="sm" onClick={save} disabled={!dirty || busy}>
               {busy ? t("common.saving") : t("common.save")}

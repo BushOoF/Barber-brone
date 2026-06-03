@@ -210,7 +210,7 @@ function MonthCalendar({
   return (
     <div className="rounded-2xl bg-surface-1 p-3 ring-1 ring-line-soft">
       <div className="mb-2 px-1 text-sm font-bold tabular-nums">{monthName} {year}</div>
-      <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wider text-tg-hint">
+      <div className="mb-1 grid grid-cols-7 gap-1 text-center eyebrow text-tg-hint">
         {weekdayKeys.map((k) => (
           <div key={k}>{t(k)}</div>
         ))}
@@ -265,7 +265,7 @@ function SelectedList({
   }
   return (
     <section>
-      <h3 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-tg-hint">
+      <h3 className="mb-2 eyebrow text-tg-hint">
         {t("vac.count", { n: vacations.length })}
       </h3>
       <div className="space-y-1.5">

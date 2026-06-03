@@ -67,7 +67,7 @@ export function Timeline({ data, currency, pxPerMin = 1.8, canTransfer, onDiscar
           return (
             <div key={`gap-${idx}`} className="grid grid-cols-[56px_1fr] gap-2 items-stretch" style={{ height }}>
               <TimeGutter primary={startLabel} secondary={`→ ${endLabel}`} muted />
-              <div className="flex items-center justify-center rounded-xl border border-dashed border-line-strong text-[11px] font-bold uppercase tracking-wider text-tg-hint">
+              <div className="flex items-center justify-center rounded-xl border border-dashed border-line-strong eyebrow text-tg-hint">
                 {minutes} {t("dash.min_free")}
               </div>
             </div>

@@ -32,7 +32,7 @@ export function Sheet({ open, onClose, title, children, footer }: Props) {
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 32, stiffness: 320 }}
             onClick={(e) => e.stopPropagation()}
-            className="flex max-h-[92dvh] w-full flex-col rounded-t-[28px] bg-tg-bg shadow-[0_-12px_40px_rgba(0,0,0,0.18)]"
+            className="flex max-h-[92dvh] w-full flex-col rounded-t-3xl bg-tg-bg shadow-[0_-12px_40px_rgba(0,0,0,0.18)]"
           >
             <div className="flex justify-center pt-2 pb-1">
               <div className="h-1.5 w-12 rounded-full bg-line-strong" />

@@ -73,12 +73,12 @@ export function Confirmation({ me }: { me: MeResponse }) {
       transition={{ duration: 0.3, ease: "easeOut" }}
       className="flex h-full flex-col safe-top safe-bottom"
     >
-      <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6 text-center">
+      <div className="flex-1 space-y-5 overflow-y-auto px-5 py-6 text-center">
         <motion.div
           initial={{ scale: 0, rotate: -20 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ type: "spring", stiffness: 220, damping: 14, delay: 0.05 }}
-          className="mx-auto mt-4 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-500/15 text-5xl ring-4 ring-emerald-500/30"
+          className="mx-auto mt-4 flex h-24 w-24 items-center justify-center rounded-full bg-success/15 text-5xl ring-4 ring-success/30"
         >
           ✅
         </motion.div>
@@ -88,7 +88,7 @@ export function Confirmation({ me }: { me: MeResponse }) {
           <p className="mt-1 text-sm text-tg-hint">{t("confirm.subtitle")}</p>
         </div>
 
-        <div className="rounded-3xl bg-surface-1 p-5 text-left ring-1 ring-line-soft">
+        <div className="rounded-2xl bg-surface-1 p-4 text-left ring-1 ring-line-soft">
           <Row label={t("confirm.time")} value={formatTime(booking.startAt)} strong />
           <Divider />
           <Row label={t("confirm.duration")} value={formatDuration(booking.durationMin)} />
@@ -132,7 +132,7 @@ export function Confirmation({ me }: { me: MeResponse }) {
           className={
             "w-full rounded-2xl px-4 py-3 text-sm font-bold transition ring-1 " +
             (remindersOn
-              ? "bg-emerald-500/10 text-emerald-700 ring-emerald-500/30"
+              ? "bg-success/10 text-success ring-success/30"
               : "bg-tg-destructive/10 text-tg-destructive ring-tg-destructive/30")
           }
         >
@@ -152,7 +152,7 @@ export function Confirmation({ me }: { me: MeResponse }) {
 function Row({ label, value, strong, highlight }: { label: string; value: string; strong?: boolean; highlight?: boolean }) {
   return (
     <div className="flex items-baseline justify-between py-1.5">
-      <span className="text-xs font-bold uppercase tracking-wider text-tg-hint">{label}</span>
+      <span className="eyebrow text-tg-hint">{label}</span>
       <span
         className={[
           highlight ? "text-xl font-extrabold text-tg-button" : strong ? "text-lg font-bold" : "font-semibold",
@@ -187,7 +187,7 @@ function LocationRow({
       : `https://maps.google.com/?q=${encodeURIComponent(value)}`;
   return (
     <div className="flex items-start justify-between gap-3 py-1.5">
-      <span className="shrink-0 text-xs font-bold uppercase tracking-wider text-tg-hint">{label}</span>
+      <span className="shrink-0 eyebrow text-tg-hint">{label}</span>
       <a
         href={mapHref}
         target="_blank"
