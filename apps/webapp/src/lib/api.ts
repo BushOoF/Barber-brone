@@ -105,10 +105,10 @@ export const api = {
   // ---- Admin endpoints ----
   adminAllServices: () => request<{ services: ServiceDef[] }>("/api/admin/services"),
   adminListApprentices: () => request<{ apprentices: Apprentice[] }>("/api/admin/apprentices"),
-  adminAddApprentice: (telegramId: string, displayName: string) =>
-    request<Apprentice>("/api/admin/apprentices", {
+  adminAddApprentice: (phone: string, displayName: string) =>
+    request<Apprentice & { linked: boolean }>("/api/admin/apprentices", {
       method: "POST",
-      body: JSON.stringify({ telegramId, displayName }),
+      body: JSON.stringify({ phone, displayName }),
     }),
   adminUpdateApprentice: (id: string, patch: { isActive?: boolean; displayName?: string }) =>
     request<Barber>(`/api/admin/apprentices/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
@@ -166,6 +166,16 @@ export const api = {
     request<FinancesSummary>(
       `/api/admin/finances/summary${from || to ? `?${[from && `from=${from}`, to && `to=${to}`].filter(Boolean).join("&")}` : ""}`,
     ),
+  adminFinanceEntries: () => request<{ entries: FinanceEntry[] }>("/api/admin/finances/entries"),
+  adminAddFinanceEntry: (body: {
+    kind: "INCOME" | "EXPENSE";
+    amountMinor: number;
+    note?: string | null;
+    date: string;
+    repeatEveryDays?: number | null;
+  }) => request<{ entry: FinanceEntry }>("/api/admin/finances/entries", { method: "POST", body: JSON.stringify(body) }),
+  adminDeleteFinanceEntry: (id: string) =>
+    request<{ deletedId: string }>(`/api/admin/finances/entries/${id}`, { method: "DELETE" }),
 };
 
 // ---- Types ----
@@ -217,7 +227,7 @@ export interface Apprentice extends Barber {
 
 export interface AdminUser {
   id: string;
-  telegramId: string;
+  telegramId: string | null;
   username: string | null;
   firstName: string | null;
   lastName: string | null;
@@ -344,4 +354,16 @@ export interface FinancesSummary {
     _sum: { totalPriceMinor: number | null };
     _count: { _all: number };
   }[];
+  manualIncomeMinor: number;
+  manualExpenseMinor: number;
+}
+
+export interface FinanceEntry {
+  id: string;
+  kind: "INCOME" | "EXPENSE";
+  amountMinor: number;
+  note: string | null;
+  date: string; // YYYY-MM-DD
+  repeatEveryDays: number | null; // null = one-time
+  createdAt: string;
 }

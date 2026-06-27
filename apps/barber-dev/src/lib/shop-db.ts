@@ -59,15 +59,6 @@ export async function setShopApprenticeFeature(dbUrl: string, enabled: boolean):
   });
 }
 
-export async function setShopVoiceFeature(dbUrl: string, enabled: boolean): Promise<void> {
-  await withClient(dbUrl, async (c) => {
-    await c.query(
-      `UPDATE "Settings" SET "hasVoiceFeature" = $1, "updatedAt" = NOW() WHERE id = 'singleton'`,
-      [enabled],
-    );
-  });
-}
-
 export async function setShopLocation(dbUrl: string, location: string | null): Promise<void> {
   await withClient(dbUrl, async (c) => {
     await c.query(

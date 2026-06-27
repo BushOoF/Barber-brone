@@ -36,7 +36,7 @@ export interface BroadcastResult {
  */
 export async function broadcastAnnouncement(input: BroadcastInput): Promise<BroadcastResult> {
   const recipients = await prisma.user.findMany({
-    where: { role: "CUSTOMER", phone: { not: null } },
+    where: { role: "CUSTOMER", phone: { not: null }, telegramId: { not: null } },
     select: { telegramId: true },
   });
 

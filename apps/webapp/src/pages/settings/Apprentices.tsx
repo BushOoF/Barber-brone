@@ -98,8 +98,14 @@ function ApprenticeRow({
         <div className="min-w-0 flex-1">
           <div className="truncate text-base font-semibold">{a.displayName}</div>
           <div className="mt-0.5 text-xs text-tg-hint">
-            {a.user?.username ? `@${a.user.username} · ` : ""}TG ID: {a.user?.telegramId ?? "—"}
+            {a.user?.username ? `@${a.user.username} · ` : ""}
+            {a.user?.phone ?? "—"}
           </div>
+          {a.user && a.user.telegramId == null ? (
+            <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-semibold text-warning">
+              ⏳ {t("apr.pending")}
+            </div>
+          ) : null}
         </div>
         <span
           className={
@@ -141,14 +147,15 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 
 function AddApprenticeSheet({ open, onClose, onAdded }: { open: boolean; onClose: () => void; onAdded: () => void }) {
   const t = useT();
-  const [tgId, setTgId] = useState("");
+  const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
     setError(null);
-    if (!/^[0-9]+$/.test(tgId.trim())) {
+    // Accept any reasonable phone format; the server matches on the last 9 digits.
+    if (phone.replace(/\D/g, "").length < 7) {
       setError(t("apr.add_err_id"));
       return;
     }
@@ -158,9 +165,9 @@ function AddApprenticeSheet({ open, onClose, onAdded }: { open: boolean; onClose
     }
     setBusy(true);
     try {
-      await api.adminAddApprentice(tgId.trim(), name.trim());
+      await api.adminAddApprentice(phone.trim(), name.trim());
       haptic("success");
-      setTgId("");
+      setPhone("");
       setName("");
       onAdded();
       onClose();
@@ -191,10 +198,11 @@ function AddApprenticeSheet({ open, onClose, onAdded }: { open: boolean; onClose
       <div className="space-y-3">
         <Field label={t("apr.field_id")}>
           <input
-            value={tgId}
-            onChange={(e) => setTgId(e.target.value)}
-            inputMode="numeric"
-            placeholder="707841575"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            inputMode="tel"
+            type="tel"
+            placeholder="+998 90 123 45 67"
             className="w-full rounded-xl bg-surface-1 px-4 py-3 text-base font-medium ring-1 ring-line-strong focus:outline-none focus:ring-2 focus:ring-tg-button"
           />
         </Field>
