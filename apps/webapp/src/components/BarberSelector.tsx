@@ -14,7 +14,7 @@ export function BarberSelector({ barbers, selectedId, onSelect }: Props) {
   if (barbers.length === 1) {
     return (
       <div className="rounded-2xl bg-surface-1 px-4 py-3 ring-1 ring-line-soft">
-        <div className="text-[10px] font-bold uppercase tracking-wider text-tg-hint">{t("landing.barber")}</div>
+        <div className="eyebrow text-tg-hint">{t("landing.barber")}</div>
         <div className="mt-0.5 text-base font-bold">{barbers[0].displayName}</div>
       </div>
     );
@@ -39,7 +39,7 @@ export function BarberSelector({ barbers, selectedId, onSelect }: Props) {
             }
           >
             <div className="font-bold leading-tight">{b.displayName}</div>
-            <div className="text-[10px] font-semibold uppercase tracking-wider opacity-70">
+            <div className="eyebrow opacity-70">
               {b.role === "MAIN" ? t("landing.main_barber") : t("landing.apprentice")}
             </div>
           </button>

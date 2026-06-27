@@ -4,7 +4,7 @@ import { useT } from "../state/Lang";
 
 interface Props {
   title: string;
-  subtitle?: string;
+  subtitle?: React.ReactNode;
   onBack?: () => void;
   trailing?: React.ReactNode;
 }

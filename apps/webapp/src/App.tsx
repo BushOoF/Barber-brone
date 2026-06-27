@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useApi } from "./hooks/useApi";
 import { api } from "./lib/api";
 import { Landing } from "./pages/Landing";
@@ -34,6 +34,7 @@ export function App() {
 
   return (
     <LangProvider lang={lang}>
+      <Shell>
       <Routes>
         <Route
           path="/"
@@ -76,7 +77,31 @@ export function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </Shell>
     </LangProvider>
+  );
+}
+
+/**
+ * Responsive frame. On phones the app fills the screen (Telegram Mini App look).
+ * On wider screens (PC) it becomes a centered card on a neutral backdrop — wider
+ * for the admin/dashboard/settings screens that show tables and charts, narrower
+ * for the customer booking flow which reads best as a single column.
+ */
+function Shell({ children }: { children: React.ReactNode }) {
+  const { pathname } = useLocation();
+  const wide = pathname.startsWith("/dashboard") || pathname.startsWith("/settings");
+  return (
+    <div className="flex min-h-[100dvh] justify-center bg-tg-bg md:bg-[color-mix(in_srgb,var(--tg-text)_7%,var(--tg-bg))] md:p-6">
+      <div
+        className={
+          "relative flex h-[100dvh] w-full flex-col overflow-hidden bg-tg-bg md:h-[calc(100dvh-3rem)] md:rounded-3xl md:shadow-soft md:ring-1 md:ring-line-soft " +
+          (wide ? "md:max-w-5xl" : "md:max-w-md")
+        }
+      >
+        {children}
+      </div>
+    </div>
   );
 }
 

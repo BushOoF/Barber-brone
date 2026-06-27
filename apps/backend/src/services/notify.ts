@@ -3,10 +3,12 @@ import { bot } from "../bot/index.js";
 import { prisma } from "../lib/prisma.js";
 import { formatLocalTime } from "../lib/time.js";
 import { formatMoney } from "../lib/money.js";
-import { DEFAULT_LANG, t, type Lang } from "../lib/i18n.js";
+import { DEFAULT_LANG, escapeMd, t, type Lang } from "../lib/i18n.js";
 
 /** Send a Telegram message; swallow & log errors so a single failed delivery doesn't break batch flows. */
-export async function safeSend(telegramId: bigint, text: string): Promise<void> {
+export async function safeSend(telegramId: bigint | null, text: string): Promise<void> {
+  // Placeholder (phone-only) users have no Telegram account yet — nothing to send to.
+  if (telegramId == null) return;
   try {
     await bot.api.sendMessage(Number(telegramId), text, { parse_mode: "Markdown" });
   } catch (err) {
@@ -32,15 +34,15 @@ export async function notifyBookingConfirmed(bookingId: string): Promise<void> {
   let locationText: string | null = null;
   if (settings?.locationLat != null && settings?.locationLng != null) {
     const mapUrl = `https://maps.google.com/?q=${settings.locationLat},${settings.locationLng}`;
-    locationText = settings.location ? `[${settings.location}](${mapUrl})` : mapUrl;
+    locationText = settings.location ? `[${escapeMd(settings.location)}](${mapUrl})` : mapUrl;
   } else if (settings?.location) {
-    locationText = settings.location;
+    locationText = escapeMd(settings.location);
   }
   const locationLine = locationText
     ? t(lang, "notify.location_line", { location: locationText })
     : "";
   const text = t(lang, "notify.confirmed", {
-    barber: b.barber.displayName,
+    barber: escapeMd(b.barber.displayName),
     time: formatLocalTime(b.startAt),
     dur: b.durationMin,
     total: formatMoney(b.totalPriceMinor),
@@ -93,13 +95,13 @@ export async function notifyTransferred(bookingId: string, oldBarberName: string
     b.user.telegramId,
     t(lang, "notify.transferred", {
       time: formatLocalTime(b.startAt),
-      oldBarber: oldBarberName,
-      newBarber: newBarberName,
+      oldBarber: escapeMd(oldBarberName),
+      newBarber: escapeMd(newBarberName),
     }),
   );
 }
 
-export async function notifyReminder(b: Booking & { user: { telegramId: bigint; language?: Lang | string | null } }): Promise<void> {
+export async function notifyReminder(b: Booking & { user: { telegramId: bigint | null; language?: Lang | string | null } }): Promise<void> {
   const lang = langOf(b.user);
   await safeSend(b.user.telegramId, t(lang, "notify.reminder", { time: formatLocalTime(b.startAt) }));
 }

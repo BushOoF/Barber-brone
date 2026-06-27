@@ -49,46 +49,7 @@ const STRINGS = {
     "service.wash": "Soch yuvish",
     "service.beard": "Soqol olish",
 
-    "voice.unavailable": "🎙 Ovozli yordamchi hozircha ishlamayapti. Birozdan so'ng urinib ko'ring.",
-    "voice.failed": "🎙 Ovozli xabarni qayta ishlab bo'lmadi. Yana bir bor yuboring.",
-    "voice.not_understood":
-      "🤔 Tushunolmadim.\nEshitganim: \"{heard}\"\nMasalan: \"ertaga soat uchda yozing\" yoki sartarosh uchun: \"birdan ikkigacha tanaffus\".",
-    "voice.heard": "\n\n_Eshitildi:_ \"{heard}\"",
-    "voice.confirm_title": "Tasdiqlaysizmi?",
-    "voice.btn_confirm": "✅ Tasdiqlash",
-    "voice.btn_cancel": "❌ Bekor qilish",
-    "voice.cancelled": "❌ Bekor qilindi.",
-    "voice.now": "hozir",
-    "voice.today": "bugun",
-    "voice.tomorrow": "ertaga",
-    "voice.sum_book_asap": "✂️ Eng yaqin bo'sh vaqtga yozilish",
-    "voice.sum_book_time": "✂️ Yozilish — {date}, soat {time}",
-    "voice.sum_break": "☕️ Tanaffus — {start}–{end}",
-    "voice.sum_walkin": "🚶 Navbatsiz mijoz — {start}, {dur} daqiqa",
-    "voice.booked": "✅ Soat *{time}* ga yozildingiz!",
-    "voice.break_done": "✅ Tanaffus qo'shildi: {start}–{end}.",
-    "voice.walkin_done": "✅ Navbatsiz mijoz qo'shildi: {start}.",
-    "voice.no_slot": "😔 Yaqin kunlarda bo'sh vaqt topilmadi.",
-    "voice.slot_taken": "😔 Bu vaqt band. Boshqa vaqtni ayting.",
-    "voice.need_phone": "Avval /start bosib, telefon raqamingizni yuboring.",
-    "voice.no_barber": "Sartarosh topilmadi.",
-    "voice.sum_cancel_book": "🗑 Yozuvni bekor qilish",
-    "voice.sum_cancel_break": "🗑 Tanaffusni bekor qilish",
-    "voice.sum_announce": "📢 E'lon: \"{msg}\"",
-    "voice.sum_service": "💲 {service}: {changes}",
-    "voice.sum_hours": "🕐 Ish vaqti: {hours}",
-    "voice.sum_vacation": "🌴 Dam olish kuni: {date}",
-    "voice.booking_cancelled": "✅ Yozuv bekor qilindi ({time}).",
-    "voice.break_cancelled": "✅ Tanaffus bekor qilindi ({start}–{end}).",
-    "voice.announced": "✅ E'lon {delivered}/{recipients} mijozga yuborildi.",
-    "voice.service_updated": "✅ {name} yangilandi.",
-    "voice.hours_updated": "✅ Ish vaqti yangilandi.",
-    "voice.vacation_added": "✅ Dam olish kuni qo'shildi: {date}.",
-    "voice.nothing": "Bekor qiladigan narsa topilmadi.",
-    "voice.ambiguous": "Bir nechtasi mos keldi — vaqtini aniqroq ayting.",
-    "voice.service_not_found": "Bunday xizmat topilmadi.",
     "notify.cancelled_by_shop": "❌ Kechirasiz, {time} dagi yozuvingiz bekor qilindi.",
-    "voice.disabled": "🎙 Ovozli yordamchi bu sartaroshxonada o'chirilgan.",
   },
 
   RU: {
@@ -130,46 +91,7 @@ const STRINGS = {
     "service.wash": "Мытьё волос",
     "service.beard": "Стрижка бороды",
 
-    "voice.unavailable": "🎙 Голосовой помощник сейчас недоступен. Попробуйте чуть позже.",
-    "voice.failed": "🎙 Не удалось обработать голосовое сообщение. Отправьте ещё раз.",
-    "voice.not_understood":
-      "🤔 Не понял.\nУслышал: \"{heard}\"\nНапример: \"запишите на завтра в три\" или для мастера: \"перерыв с часу до двух\".",
-    "voice.heard": "\n\n_Услышано:_ \"{heard}\"",
-    "voice.confirm_title": "Подтвердить?",
-    "voice.btn_confirm": "✅ Подтвердить",
-    "voice.btn_cancel": "❌ Отмена",
-    "voice.cancelled": "❌ Отменено.",
-    "voice.now": "сейчас",
-    "voice.today": "сегодня",
-    "voice.tomorrow": "завтра",
-    "voice.sum_book_asap": "✂️ Запись на ближайшее свободное время",
-    "voice.sum_book_time": "✂️ Запись — {date}, в {time}",
-    "voice.sum_break": "☕️ Перерыв — {start}–{end}",
-    "voice.sum_walkin": "🚶 Клиент без записи — {start}, {dur} мин",
-    "voice.booked": "✅ Вы записаны на *{time}*!",
-    "voice.break_done": "✅ Перерыв добавлен: {start}–{end}.",
-    "voice.walkin_done": "✅ Клиент без записи добавлен: {start}.",
-    "voice.no_slot": "😔 На ближайшие дни нет свободного времени.",
-    "voice.slot_taken": "😔 Это время занято. Назовите другое.",
-    "voice.need_phone": "Сначала нажмите /start и поделитесь номером телефона.",
-    "voice.no_barber": "Мастер не найден.",
-    "voice.sum_cancel_book": "🗑 Отменить запись",
-    "voice.sum_cancel_break": "🗑 Отменить перерыв",
-    "voice.sum_announce": "📢 Объявление: \"{msg}\"",
-    "voice.sum_service": "💲 {service}: {changes}",
-    "voice.sum_hours": "🕐 Часы работы: {hours}",
-    "voice.sum_vacation": "🌴 Выходной: {date}",
-    "voice.booking_cancelled": "✅ Запись отменена ({time}).",
-    "voice.break_cancelled": "✅ Перерыв отменён ({start}–{end}).",
-    "voice.announced": "✅ Объявление отправлено {delivered}/{recipients} клиентам.",
-    "voice.service_updated": "✅ {name} обновлено.",
-    "voice.hours_updated": "✅ Часы работы обновлены.",
-    "voice.vacation_added": "✅ Добавлен выходной: {date}.",
-    "voice.nothing": "Нечего отменять.",
-    "voice.ambiguous": "Подходит несколько — уточните время.",
-    "voice.service_not_found": "Такая услуга не найдена.",
     "notify.cancelled_by_shop": "❌ Извините, ваша запись на {time} отменена.",
-    "voice.disabled": "🎙 Голосовой помощник отключён в этой парикмахерской.",
   },
 
   EN: {
@@ -211,46 +133,7 @@ const STRINGS = {
     "service.wash": "Hair wash",
     "service.beard": "Beard cut",
 
-    "voice.unavailable": "🎙 The voice assistant is unavailable right now. Please try again shortly.",
-    "voice.failed": "🎙 Couldn't process that voice message. Please send it again.",
-    "voice.not_understood":
-      "🤔 I didn't catch that.\nHeard: \"{heard}\"\nE.g. \"book me tomorrow at three\" or, for the barber: \"break from one to two\".",
-    "voice.heard": "\n\n_Heard:_ \"{heard}\"",
-    "voice.confirm_title": "Confirm?",
-    "voice.btn_confirm": "✅ Confirm",
-    "voice.btn_cancel": "❌ Cancel",
-    "voice.cancelled": "❌ Cancelled.",
-    "voice.now": "now",
-    "voice.today": "today",
-    "voice.tomorrow": "tomorrow",
-    "voice.sum_book_asap": "✂️ Book the next available slot",
-    "voice.sum_book_time": "✂️ Booking — {date}, at {time}",
-    "voice.sum_break": "☕️ Break — {start}–{end}",
-    "voice.sum_walkin": "🚶 Walk-in — {start}, {dur} min",
-    "voice.booked": "✅ You're booked for *{time}*!",
-    "voice.break_done": "✅ Break added: {start}–{end}.",
-    "voice.walkin_done": "✅ Walk-in added: {start}.",
-    "voice.no_slot": "😔 No free slots in the next few days.",
-    "voice.slot_taken": "😔 That time is taken. Tell me another.",
-    "voice.need_phone": "First tap /start and share your phone number.",
-    "voice.no_barber": "No barber found.",
-    "voice.sum_cancel_book": "🗑 Cancel a booking",
-    "voice.sum_cancel_break": "🗑 Cancel a break",
-    "voice.sum_announce": "📢 Announce: \"{msg}\"",
-    "voice.sum_service": "💲 {service}: {changes}",
-    "voice.sum_hours": "🕐 Working hours: {hours}",
-    "voice.sum_vacation": "🌴 Day off: {date}",
-    "voice.booking_cancelled": "✅ Booking cancelled ({time}).",
-    "voice.break_cancelled": "✅ Break cancelled ({start}–{end}).",
-    "voice.announced": "✅ Announcement sent to {delivered}/{recipients} customers.",
-    "voice.service_updated": "✅ {name} updated.",
-    "voice.hours_updated": "✅ Working hours updated.",
-    "voice.vacation_added": "✅ Day off added: {date}.",
-    "voice.nothing": "Nothing to cancel.",
-    "voice.ambiguous": "Several match — please say the time.",
-    "voice.service_not_found": "No such service found.",
     "notify.cancelled_by_shop": "❌ Sorry, your appointment at {time} was cancelled.",
-    "voice.disabled": "🎙 The voice assistant is turned off for this shop.",
   },
 } as const satisfies Record<Lang, Record<string, string>>;
 
@@ -270,6 +153,18 @@ export function t(
   const template = STRINGS[langKey][key] ?? STRINGS[DEFAULT_LANG][key] ?? key;
   if (!vars) return template;
   return template.replace(/\{(\w+)\}/g, (_, k) => (k in vars ? String(vars[k]) : `{${k}}`));
+}
+
+/**
+ * Escape user-controlled text before embedding it in a Telegram message sent
+ * with `parse_mode: "Markdown"` (legacy). Telegram's legacy Markdown only lets
+ * you backslash-escape these four characters; an unescaped one anywhere in the
+ * message makes Telegram reject the whole send with HTTP 400. Without this, a
+ * barber named "Bek_Pro" or an address containing "*" would silently drop the
+ * customer's confirmation/reminder/shift notification.
+ */
+export function escapeMd(s: string): string {
+  return s.replace(/[_*`\[]/g, (c) => `\\${c}`);
 }
 
 export function languageButtons() {

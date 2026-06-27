@@ -27,7 +27,6 @@ import {
 import { getMonthlyRevenue } from "../services/revenue.js";
 import {
   setShopApprenticeFeature,
-  setShopVoiceFeature,
   setShopLocation,
   getShopSnapshot,
 } from "../lib/shop-db.js";
@@ -48,7 +47,6 @@ const HELP_TEXT = [
   "",
   "*Per-shop features* (writes to the shop's own DB)",
   "/apprentice <slug> on|off — toggle apprentice feature in the shop's Mini App",
-  "/voice <slug> on|off — toggle the voice AI assistant for the shop",
   "/location <slug> <address> — set/update the shop's address",
   "",
   "*Operators*",
@@ -270,30 +268,6 @@ bot.command("apprentice", async (ctx) => {
   }
 });
 
-bot.command("voice", async (ctx) => {
-  const parts = (ctx.match ?? "").trim().split(/\s+/);
-  if (parts.length < 2) {
-    await ctx.reply("Usage: `/voice <slug> on|off`", { parse_mode: "Markdown" });
-    return;
-  }
-  const [slug, state] = parts;
-  const enabled = /^on|true|1|yes$/i.test(state);
-  const shop = await findShopBySlug(slug);
-  if (!shop) { await ctx.reply(`Shop \`${slug}\` not found.`, { parse_mode: "Markdown" }); return; }
-  if (!shop.dbUrl) { await ctx.reply(`No dbUrl on file for \`${slug}\` — set it before toggling features.`, { parse_mode: "Markdown" }); return; }
-
-  try {
-    await setShopVoiceFeature(shop.dbUrl, enabled);
-    await ctx.reply(
-      `✅ Voice AI assistant for *${shop.name}* is now *${enabled ? "ON" : "OFF"}*.\n` +
-        "_(The shop must also be deployed with VOICE_ENABLED=true and the AI sidecar running.)_",
-      { parse_mode: "Markdown" },
-    );
-  } catch (err) {
-    await ctx.reply(`Failed: ${(err as Error).message}`);
-  }
-});
-
 bot.command("location", async (ctx) => {
   const text = (ctx.match ?? "").trim();
   const firstSpace = text.indexOf(" ");
@@ -412,7 +386,6 @@ export async function startBot() {
     { command: "billing", description: "This month's pending fees" },
     { command: "collect", description: "Mark fee as collected" },
     { command: "apprentice", description: "Toggle apprentice feature" },
-    { command: "voice", description: "Toggle voice AI assistant" },
     { command: "location", description: "Set shop address" },
     { command: "operators", description: "List operators" },
     { command: "help", description: "Help" },

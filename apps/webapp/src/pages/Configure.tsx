@@ -7,6 +7,7 @@ import { useBookingDraft } from "../state/BookingDraft";
 import { PartyStepper } from "../components/PartyStepper";
 import { ServiceCheckboxes } from "../components/ServiceCheckboxes";
 import { StylePickerSheet } from "../components/StylePickerSheet";
+import { PageHeader } from "../components/PageHeader";
 import { Button } from "../components/ui/Button";
 import {
   clientQuote,
@@ -111,20 +112,18 @@ export function Configure({ me }: { me: MeResponse }) {
       transition={{ duration: 0.22, ease: "easeOut" }}
       className="flex h-full flex-col"
     >
-      <header className="px-5 pb-2 pt-4 safe-top">
-        <button onClick={onCancel} className="-ml-1 inline-flex items-center text-sm font-semibold text-tg-hint">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="mr-1">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-          {t("configure.back")}
-        </button>
-        <h1 className="mt-1 text-2xl font-extrabold tracking-tight">{t("configure.title")}</h1>
-        <div className="mt-0.5 text-sm text-tg-hint">
-          {t("configure.slot")} <span className="font-bold text-tg-text tabular-nums">{formatTime(draft.startAt)}</span>
-        </div>
-      </header>
+      <PageHeader
+        title={t("configure.title")}
+        onBack={onCancel}
+        subtitle={
+          <>
+            {t("configure.slot")}{" "}
+            <span className="font-bold text-tg-text tabular-nums">{formatTime(draft.startAt)}</span>
+          </>
+        }
+      />
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
+      <div className="flex-1 space-y-5 overflow-y-auto px-5 py-4">
         <motion.div
           key={`${quote.totalPriceMinor}-${quote.durationMin}`}
           initial={{ scale: 0.97 }}
@@ -132,7 +131,7 @@ export function Configure({ me }: { me: MeResponse }) {
           transition={{ type: "spring", stiffness: 340, damping: 22 }}
           className="rounded-3xl bg-gradient-to-br from-tg-button to-tg-link p-5 text-tg-buttonText shadow-pop"
         >
-          <div className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-85">{t("configure.estimated_total")}</div>
+          <div className="eyebrow opacity-85">{t("configure.estimated_total")}</div>
           <div className="mt-1 flex items-baseline justify-between">
             <div className="text-3xl font-extrabold tabular-nums">{formatMoney(quote.totalPriceMinor, me.shop.currency)}</div>
             <div className="text-sm font-bold opacity-90">{formatDuration(quote.durationMin)}</div>
@@ -141,7 +140,7 @@ export function Configure({ me }: { me: MeResponse }) {
         </motion.div>
 
         <section className="space-y-2">
-          <h2 className="text-[11px] font-bold uppercase tracking-wider text-tg-hint">{t("configure.services_section")}</h2>
+          <h2 className="eyebrow text-tg-hint">{t("configure.services_section")}</h2>
 
           {/* Locked haircut row(s) + inline style picker chip */}
           {draft.adults > 0 && adultPicked ? (
@@ -176,7 +175,7 @@ export function Configure({ me }: { me: MeResponse }) {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-[11px] font-bold uppercase tracking-wider text-tg-hint">{t("configure.party_section")}</h2>
+          <h2 className="eyebrow text-tg-hint">{t("configure.party_section")}</h2>
           <PartyStepper label={t("common.adults_label")} icon="🧔" value={draft.adults} min={0} onChange={(v) => set({ adults: v })} />
           <PartyStepper label={t("common.children_label")} icon="🧒" value={draft.children} min={0} onChange={(v) => set({ children: v })} />
           {peopleCount === 0 ? (
@@ -194,10 +193,10 @@ export function Configure({ me }: { me: MeResponse }) {
       </div>
 
       <footer className="flex items-center gap-3 border-t border-line-soft bg-tg-bg px-5 py-3 safe-bottom">
-        <Button variant="ghost" onClick={onCancel} disabled={submitting}>
+        <Button size="lg" variant="ghost" onClick={onCancel} disabled={submitting}>
           {t("common.cancel")}
         </Button>
-        <Button size="xl" className="flex-1" onClick={onBook} disabled={submitting || !canBook}>
+        <Button size="lg" className="flex-1" onClick={onBook} disabled={submitting || !canBook}>
           {submitting ? t("configure.booking") : t("configure.book")}
         </Button>
       </footer>

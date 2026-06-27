@@ -61,8 +61,8 @@ export function Landing({ me }: { me: MeResponse }) {
       className="flex h-full flex-col gap-5 px-5 py-5 safe-top safe-bottom"
     >
       <header>
-        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-tg-hint">{me.shop.name}</div>
-        <h1 className="mt-1 text-3xl font-extrabold tracking-tight">{t("landing.title")}</h1>
+        <div className="eyebrow text-tg-hint">{me.shop.name}</div>
+        <h1 className="mt-1 text-2xl font-extrabold tracking-tight">{t("landing.title")}</h1>
       </header>
 
       {upcomingCount > 0 ? (
@@ -75,7 +75,7 @@ export function Landing({ me }: { me: MeResponse }) {
           className="flex w-full items-center justify-between rounded-2xl bg-tg-button/12 px-4 py-3 text-left ring-1 ring-tg-button/30 transition active:scale-[0.99]"
         >
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-tg-button">
+            <div className="eyebrow text-tg-button">
               {t("landing.my_bookings")}
             </div>
             <div className="text-sm font-bold">

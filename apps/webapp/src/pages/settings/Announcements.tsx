@@ -87,7 +87,7 @@ export function AnnouncementsPage() {
     <div className="flex h-full flex-col">
       <PageHeader title={t("ann.title")} subtitle={t("ann.sub")} />
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-5 pb-6">
+      <div className="flex-1 space-y-5 overflow-y-auto px-5 pb-6">
         <div className="rounded-2xl bg-surface-1 p-4 ring-1 ring-line-soft">
           {/* Photo preview */}
           {photo && previewUrl ? (
@@ -139,7 +139,7 @@ export function AnnouncementsPage() {
                 {t("ann.attach_photo")}
               </Button>
               {lastResult ? (
-                <div className="text-xs font-semibold text-emerald-600">
+                <div className="text-xs font-semibold text-success">
                   {t("ann.sent_summary", { delivered: lastResult.delivered, recipients: lastResult.recipients })}
                 </div>
               ) : null}
@@ -160,7 +160,7 @@ export function AnnouncementsPage() {
         </div>
 
         <section>
-          <h2 className="mb-2 text-xs font-bold uppercase tracking-wider text-tg-hint">{t("ann.history_title")}</h2>
+          <h2 className="mb-2 eyebrow text-tg-hint">{t("ann.history_title")}</h2>
           {history.status === "loading" ? (
             <div className="space-y-2">
               <div className="h-20 rounded-xl shimmer" />
@@ -175,7 +175,7 @@ export function AnnouncementsPage() {
               {(history.data?.announcements ?? []).map((a) => (
                 <div key={a.id} className="rounded-2xl bg-surface-1 p-4 ring-1 ring-line-soft">
                   {a.photoFileId ? (
-                    <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-tg-button/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-tg-button">
+                    <div className="mb-2 inline-flex items-center gap-1 rounded-full bg-tg-button/15 px-2 py-0.5 eyebrow text-tg-button">
                       <span>📷</span>
                       <span>{t("ann.has_photo")}</span>
                       {a.photoName ? <span className="opacity-70 normal-case">· {a.photoName}</span> : null}
@@ -189,7 +189,7 @@ export function AnnouncementsPage() {
                   <div className="mt-2 flex items-center justify-between text-[11px] text-tg-hint">
                     <span>{new Date(a.createdAt).toLocaleString()}</span>
                     <span>
-                      <span className="font-bold text-emerald-600">{a.delivered}</span> {t("ann.stat_delivered")}
+                      <span className="font-bold text-success">{a.delivered}</span> {t("ann.stat_delivered")}
                       {a.failed > 0 ? (
                         <>
                           {" · "}

@@ -60,6 +60,7 @@ export async function bookingRoutes(app: FastifyInstance) {
 
     const startAt = new Date(body.startAt);
     if (Number.isNaN(startAt.getTime())) return reply.code(400).send({ error: "bad_start_at" });
+    if (startAt.getTime() < Date.now()) return reply.code(409).send({ error: "in_the_past" });
     if (!(await isSlotAvailable(barber.id, startAt, q.durationMin))) {
       return reply.code(409).send({ error: "slot_taken" });
     }
@@ -239,6 +240,7 @@ export async function bookingRoutes(app: FastifyInstance) {
 
       const oldStart = booking.startAt;
       const newStart = new Date(body.data.startAt);
+      if (newStart.getTime() < Date.now()) return reply.code(409).send({ error: "in_the_past" });
       const newEnd = new Date(newStart.getTime() + booking.durationMin * 60_000);
 
       // Bounds: within working hours of the target day.

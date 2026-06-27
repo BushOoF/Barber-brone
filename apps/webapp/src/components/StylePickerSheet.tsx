@@ -63,7 +63,7 @@ export function StylePickerSheet({ open, styles, selectedKey, context, currency,
                 <div className="flex items-center gap-2">
                   <div className="truncate text-base font-bold">{s.name}</div>
                   {s.isDefault ? (
-                    <span className="shrink-0 rounded-full bg-tg-hint/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-tg-hint">
+                    <span className="shrink-0 rounded-full bg-tg-hint/20 px-2 py-0.5 eyebrow text-tg-hint">
                       {t("style.default_label")}
                     </span>
                   ) : null}

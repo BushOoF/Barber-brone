@@ -1,15 +1,11 @@
 import { Bot, GrammyError, HttpError } from "grammy";
+import type { Role } from "@prisma/client";
 import { env, isAdminTelegramId, mainBarberTelegramId } from "../lib/env.js";
 import { prisma } from "../lib/prisma.js";
+import { phoneMatchKey } from "../lib/phone.js";
 import { DEFAULT_LANG, languageButtons, t, type Lang } from "../lib/i18n.js";
-import { registerVoiceHandlers } from "./voice.js";
 
 export const bot = new Bot(env.TELEGRAM_BOT_TOKEN);
-
-// Voice scheduling — registered only when VOICE_ENABLED (deploy-time switch).
-// Even when on, each shop can be toggled at runtime via the operator bot
-// (/voice) which flips Settings.hasVoiceFeature (checked inside the handler).
-if (env.VOICE_ENABLED) registerVoiceHandlers(bot);
 
 function webAppButtonMarkup(label: string) {
   return {
@@ -31,6 +27,40 @@ function locationRequestKeyboard(lang: Lang) {
     resize_keyboard: true,
     one_time_keyboard: true,
   };
+}
+
+/**
+ * When a person shares their contact, check whether the admin pre-created a
+ * "placeholder" apprentice for that number. If so, move the apprentice's barber
+ * profile onto this real Telegram account and promote them, then drop the
+ * placeholder row. Returns true if a link happened.
+ */
+async function linkPlaceholderApprentice(realUserId: string, realUserRole: Role, phone: string): Promise<boolean> {
+  const key = phoneMatchKey(phone);
+  if (key.length < 7) return false;
+  const placeholder = await prisma.user.findFirst({
+    where: { telegramId: null, phone: { contains: key }, id: { not: realUserId } },
+    include: { barberProfile: true },
+  });
+  if (!placeholder) return false;
+
+  await prisma.$transaction(async (tx) => {
+    if (placeholder.barberProfile) {
+      const existingBarber = await tx.barber.findUnique({ where: { userId: realUserId } });
+      if (existingBarber) {
+        // Real user already has a barber profile (e.g. they're the admin) — just drop the placeholder's.
+        await tx.barber.delete({ where: { id: placeholder.barberProfile.id } });
+      } else {
+        await tx.barber.update({ where: { id: placeholder.barberProfile.id }, data: { userId: realUserId } });
+      }
+    }
+    // Promote only a plain customer; never demote an existing admin/apprentice.
+    if (realUserRole === "CUSTOMER") {
+      await tx.user.update({ where: { id: realUserId }, data: { role: placeholder.role } });
+    }
+    await tx.user.delete({ where: { id: placeholder.id } });
+  });
+  return true;
 }
 
 async function getUserLang(telegramId: number | bigint): Promise<Lang> {
@@ -91,7 +121,7 @@ bot.command("start", async (ctx) => {
     return;
   }
 
-  await sendMainMenu(ctx.chat.id, lang, role === "ADMIN");
+  await sendMainMenu(ctx.chat.id, lang, role === "ADMIN" || user.role === "APPRENTICE");
 });
 
 bot.on("message:contact", async (ctx) => {
@@ -109,16 +139,21 @@ bot.on("message:contact", async (ctx) => {
     return;
   }
 
-  await prisma.user.update({
+  const updated = await prisma.user.update({
     where: { telegramId: BigInt(tgUser.id) },
     data: { phone: contact.phone_number },
   });
 
-  const isAdmin = isAdminTelegramId(tgUser.id);
+  // Link a placeholder apprentice the admin may have pre-created for this number.
+  await linkPlaceholderApprentice(updated.id, updated.role, contact.phone_number);
+  const refreshed = await prisma.user.findUnique({ where: { id: updated.id }, select: { role: true } });
+  const isStaff =
+    isAdminTelegramId(tgUser.id) || refreshed?.role === "ADMIN" || refreshed?.role === "APPRENTICE";
+
   await ctx.reply(t(lang, "bot.contact_thanks"), {
     reply_markup: { remove_keyboard: true },
   });
-  await sendMainMenu(ctx.chat.id, lang, isAdmin);
+  await sendMainMenu(ctx.chat.id, lang, isStaff);
 });
 
 bot.command("help", async (ctx) => {

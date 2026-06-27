@@ -79,7 +79,7 @@ function CategorySection({
   const t = useT();
   return (
     <section className="space-y-2">
-      <h3 className="text-[11px] font-bold uppercase tracking-wider text-tg-hint">{title}</h3>
+      <h3 className="eyebrow text-tg-hint">{title}</h3>
       {services.length === 0 ? (
         <div className="rounded-2xl bg-surface-1 p-4 text-center text-xs text-tg-hint ring-1 ring-line-soft">
           {t("srv.empty_in_category")}
@@ -169,7 +169,7 @@ function ServiceEditor({
           <div className="flex items-center gap-2">
             <div className="truncate text-base font-bold">{localizedServiceName(lang, service.key, service.name)}</div>
             {service.isDefault ? (
-              <span className="shrink-0 rounded-full bg-tg-button/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-tg-button">
+              <span className="shrink-0 rounded-full bg-tg-button/15 px-2 py-0.5 eyebrow text-tg-button">
                 {t("srv.default_badge")}
               </span>
             ) : null}
@@ -180,8 +180,8 @@ function ServiceEditor({
           type="button"
           onClick={() => setIsActive((v) => !v)}
           className={
-            "shrink-0 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider " +
-            (isActive ? "bg-emerald-500/15 text-emerald-600" : "bg-tg-hint/15 text-tg-hint")
+            "shrink-0 rounded-full px-3 py-1 eyebrow " +
+            (isActive ? "bg-success/15 text-success" : "bg-tg-hint/15 text-tg-hint")
           }
         >
           {isActive ? t("common.active") : t("common.off")}
@@ -232,7 +232,7 @@ function NumberField({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-tg-hint">{label}</span>
+      <span className="mb-1 block eyebrow text-tg-hint">{label}</span>
       <div className="flex items-center gap-1 rounded-xl bg-tg-bg ring-1 ring-line-strong">
         <button
           type="button"
@@ -378,7 +378,7 @@ function AddServiceSheet({ open, onClose, onAdded }: { open: boolean; onClose: (
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs font-semibold uppercase tracking-wider text-tg-hint">{label}</span>
+      <span className="mb-1 block eyebrow text-tg-hint">{label}</span>
       {children}
     </label>
   );

@@ -89,7 +89,7 @@ export function ReschedulePickerSheet({ booking, onClose, onSaved }: Props) {
           <p className="mb-3 text-sm text-tg-hint">{t("resched.hint")}</p>
 
           <div className="mb-3 rounded-2xl bg-surface-1 p-3 ring-1 ring-line-soft">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-tg-hint">
+            <div className="eyebrow text-tg-hint">
               {t("resched.current")}
             </div>
             <div className="mt-0.5 flex items-baseline justify-between">
@@ -99,7 +99,7 @@ export function ReschedulePickerSheet({ booking, onClose, onSaved }: Props) {
           </div>
 
           <label className="mb-3 block">
-            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-tg-hint">
+            <span className="mb-1 block eyebrow text-tg-hint">
               {t("resched.pick_date")}
             </span>
             <input

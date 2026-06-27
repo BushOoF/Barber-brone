@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  /* The one canonical "eyebrow" caption — small, bold, uppercase, evenly tracked.
+     Colour is applied per-use (text-tg-hint, on-gradient white + opacity, etc.)
+     so this stays a pure typographic primitive. Replaces the six ad-hoc variants
+     that previously mixed 10/11/12px, semibold/bold and 0.05/0.18/0.2em tracking. */
+  .eyebrow {
+    font-size: 11px;
+    line-height: 1.2;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+}
+
 :root {
   /* Fallbacks tuned for high contrast in light mode. Overridden at runtime from
      Telegram themeParams in lib/telegram.ts. */
@@ -22,6 +36,11 @@
   --surface-2: color-mix(in srgb, var(--tg-text) 9%, var(--tg-bg));
   --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.06);
   --shadow-pop: 0 4px 16px rgba(37, 99, 235, 0.28), 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  /* Semantic status colours as space-separated RGB channels so Tailwind's
+     /opacity modifier resolves (success/warning are defined in tailwind.config). */
+  --success: 5 150 105; /* emerald-600 */
+  --warning: 217 119 6; /* amber-600 */
 }
 
 html,

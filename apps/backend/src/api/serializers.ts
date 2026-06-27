@@ -1,9 +1,9 @@
-import type { Barber, Booking, Service, TimeBlock, User } from "@prisma/client";
+import type { Barber, Booking, FinanceEntry, Service, TimeBlock, User } from "@prisma/client";
 
 export function serializeUser(u: User) {
   return {
     id: u.id,
-    telegramId: u.telegramId.toString(),
+    telegramId: u.telegramId != null ? u.telegramId.toString() : null,
     username: u.username,
     firstName: u.firstName,
     lastName: u.lastName,
@@ -61,6 +61,18 @@ export function serializeBooking(b: Booking & { user?: User | null }) {
       username: b.user.username,
       phone: b.user.phone,
     } : undefined,
+  };
+}
+
+export function serializeFinanceEntry(e: FinanceEntry) {
+  return {
+    id: e.id,
+    kind: e.kind,
+    amountMinor: e.amountMinor,
+    note: e.note,
+    date: e.date,
+    repeatEveryDays: e.repeatEveryDays,
+    createdAt: e.createdAt.toISOString(),
   };
 }
 

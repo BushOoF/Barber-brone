@@ -22,7 +22,7 @@ export function ClientsPage() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={t("cli.search_placeholder")}
-          className="w-full rounded-2xl bg-surface-1 px-4 py-3 text-base ring-1 ring-line-strong focus:outline-none focus:ring-2 focus:ring-tg-button"
+          className="w-full rounded-xl bg-surface-1 px-4 py-3 text-base ring-1 ring-line-strong focus:outline-none focus:ring-2 focus:ring-tg-button"
         />
       </div>
 
@@ -54,11 +54,11 @@ export function ClientsPage() {
                   </div>
                   <span
                     className={
-                      "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider " +
+                      "shrink-0 rounded-full px-2 py-0.5 eyebrow " +
                       (u.role === "ADMIN"
                         ? "bg-tg-button/15 text-tg-button"
                         : u.role === "APPRENTICE"
-                        ? "bg-emerald-500/15 text-emerald-600"
+                        ? "bg-success/15 text-success"
                         : "bg-tg-hint/15 text-tg-hint")
                     }
                   >

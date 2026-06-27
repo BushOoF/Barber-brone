@@ -3,8 +3,10 @@ import { z } from "zod";
 import { requireAdmin, requireAuth } from "../auth.js";
 import { prisma } from "../../lib/prisma.js";
 import { localDayBoundsUtc } from "../../lib/time.js";
-import { serializeBarber, serializeService, serializeUser } from "../serializers.js";
+import { serializeBarber, serializeFinanceEntry, serializeService, serializeUser } from "../serializers.js";
 import { broadcastAnnouncement } from "../../services/announcements.js";
+import { summarizeManual } from "../../services/finances.js";
+import { normalizePhone, phoneMatchKey } from "../../lib/phone.js";
 
 export async function adminRoutes(app: FastifyInstance) {
   app.addHook("preHandler", requireAuth);
@@ -205,26 +207,46 @@ export async function adminRoutes(app: FastifyInstance) {
     };
   });
 
+  // Add an apprentice by phone number. If someone with that number already uses
+  // the bot, they're promoted in place. Otherwise we create a "placeholder" user
+  // (no Telegram account yet) that gets linked when they /start the bot and share
+  // the matching contact.
   app.post("/api/admin/apprentices", async (req, reply) => {
     const body = z
       .object({
-        telegramId: z.union([z.string(), z.number()]).transform((v) => BigInt(v)),
+        phone: z.string().min(3).max(32),
         displayName: z.string().min(1).max(60),
       })
       .safeParse(req.body);
     if (!body.success) return reply.code(400).send({ error: "bad_request", details: body.error.flatten() });
 
-    const user = await prisma.user.upsert({
-      where: { telegramId: body.data.telegramId },
-      update: { role: "APPRENTICE" },
-      create: { telegramId: body.data.telegramId, role: "APPRENTICE", firstName: body.data.displayName },
-    });
+    const key = phoneMatchKey(body.data.phone);
+    if (key.length < 7) return reply.code(400).send({ error: "bad_phone" });
+    const normalized = normalizePhone(body.data.phone);
+
+    // Match an existing user by the last digits of their phone (formatting-agnostic).
+    const existing = await prisma.user.findFirst({ where: { phone: { contains: key } } });
+    if (existing && existing.role === "ADMIN") {
+      return reply.code(409).send({ error: "is_admin", message: "That number belongs to the shop admin." });
+    }
+
+    const user = existing
+      ? await prisma.user.update({ where: { id: existing.id }, data: { role: "APPRENTICE" } })
+      : await prisma.user.create({
+          data: { phone: normalized, role: "APPRENTICE", firstName: body.data.displayName },
+        });
+
     const barber = await prisma.barber.upsert({
       where: { userId: user.id },
       update: { role: "APPRENTICE", displayName: body.data.displayName, isActive: true },
       create: { userId: user.id, role: "APPRENTICE", displayName: body.data.displayName, isActive: true },
     });
-    return reply.code(201).send({ ...serializeBarber(barber), user: serializeUser(user) });
+    // `linked=false` tells the UI the apprentice must still open the bot to activate.
+    return reply.code(201).send({
+      ...serializeBarber(barber),
+      user: serializeUser(user),
+      linked: user.telegramId != null,
+    });
   });
 
   app.patch("/api/admin/apprentices/:id", async (req, reply) => {
@@ -240,10 +262,16 @@ export async function adminRoutes(app: FastifyInstance) {
   app.delete("/api/admin/apprentices/:id", async (req, reply) => {
     const params = z.object({ id: z.string() }).safeParse(req.params);
     if (!params.success) return reply.code(400).send({ error: "bad_request" });
-    const barber = await prisma.barber.findUnique({ where: { id: params.data.id } });
+    const barber = await prisma.barber.findUnique({ where: { id: params.data.id }, include: { user: true } });
     if (!barber) return reply.code(404).send({ error: "not_found" });
     await prisma.barber.delete({ where: { id: barber.id } });
-    await prisma.user.update({ where: { id: barber.userId }, data: { role: "CUSTOMER" } });
+    // A placeholder apprentice that never linked a Telegram account is pure
+    // bookkeeping — remove it entirely. A real user is just demoted to customer.
+    if (barber.user.telegramId == null) {
+      await prisma.user.delete({ where: { id: barber.userId } });
+    } else {
+      await prisma.user.update({ where: { id: barber.userId }, data: { role: "CUSTOMER" } });
+    }
     return { deletedId: barber.id };
   });
 
@@ -307,6 +335,56 @@ export async function adminRoutes(app: FastifyInstance) {
       _sum: { totalPriceMinor: true },
       _count: { _all: true },
     });
-    return { from: fromKey, to: toKey, rows: grouped };
+    // Fold in manual income/expense, expanding recurring entries across the range.
+    const entries = await prisma.financeEntry.findMany();
+    const manual = summarizeManual(entries, fromKey, toKey);
+    return {
+      from: fromKey,
+      to: toKey,
+      rows: grouped,
+      manualIncomeMinor: manual.incomeMinor,
+      manualExpenseMinor: manual.expenseMinor,
+    };
+  });
+
+  // ---- Finances: manual income / expense entries ----
+  app.get("/api/admin/finances/entries", async () => {
+    const entries = await prisma.financeEntry.findMany({
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+      take: 200,
+    });
+    return { entries: entries.map(serializeFinanceEntry) };
+  });
+
+  app.post("/api/admin/finances/entries", async (req, reply) => {
+    const body = z
+      .object({
+        kind: z.enum(["INCOME", "EXPENSE"]),
+        amountMinor: z.number().int().positive(),
+        note: z.string().max(200).nullable().optional(),
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        repeatEveryDays: z.number().int().min(1).max(366).nullable().optional(),
+      })
+      .safeParse(req.body);
+    if (!body.success) return reply.code(400).send({ error: "bad_request", details: body.error.flatten() });
+    const entry = await prisma.financeEntry.create({
+      data: {
+        kind: body.data.kind,
+        amountMinor: body.data.amountMinor,
+        note: body.data.note ?? null,
+        date: body.data.date,
+        repeatEveryDays: body.data.repeatEveryDays ?? null,
+      },
+    });
+    return reply.code(201).send({ entry: serializeFinanceEntry(entry) });
+  });
+
+  app.delete("/api/admin/finances/entries/:id", async (req, reply) => {
+    const params = z.object({ id: z.string() }).safeParse(req.params);
+    if (!params.success) return reply.code(400).send({ error: "bad_request" });
+    const existing = await prisma.financeEntry.findUnique({ where: { id: params.data.id } });
+    if (!existing) return reply.code(404).send({ error: "not_found" });
+    await prisma.financeEntry.delete({ where: { id: params.data.id } });
+    return { deletedId: params.data.id };
   });
 }

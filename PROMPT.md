@@ -248,6 +248,13 @@ Settings (singleton) # shopName, timezone, currency, openHourMin, closeHourMin, 
 5. **Always show the "why".** Configure shows duration AND total live. Take-a-Break shows exactly which clients will be affected and whether transfer is even possible — *before* asking for confirmation.
 6. **Empty states have personality.** No bookings → 🪑 "The day is wide open." No apprentices → ✂️ + actionable Add button. No matches in client search → 📭.
 7. **Loading skeletons over spinners** for content with predictable shape (`.shimmer` utility) — feels faster.
+8. **One consistent design system (keeps every screen symmetrical).** A small shared token set, applied uniformly so nothing looks ad-hoc:
+   - **Gutter:** every screen uses the same horizontal padding (`px-5`); a screen's header, body and footer share that edge.
+   - **Caption primitive:** one `.eyebrow` class (11px / 700 / uppercase / `0.1em` tracking, colour applied per use) replaces all the previously hand-rolled uppercase labels (which mixed 10/11/12px, semibold/bold and 0.05–0.2em tracking).
+   - **Radius ladder:** `rounded-3xl` for gradient heroes & big empty states · `rounded-2xl` for cards/rows · `rounded-xl` for inputs & small controls · `rounded-full` for pills/chips.
+   - **Button height scale:** sm 36 · md 44 · lg 52 · xl 64 px (the `lg`/52px step needs the custom `spacing.13` token).
+   - **Semantic status colours:** `success`/`warning` are theme-independent channel vars (`rgb(var(--success) / <alpha-value>)`) so opacity utilities like `bg-success/10` resolve — used everywhere instead of raw `emerald`/`amber`.
+   - **One header component:** every navigated screen uses `PageHeader` (round back button + optional subtitle), so the back affordance and title scale never drift between pages.
 
 ---
 
